@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Level 2: Bảo Vệ Trí Nhớ 00-10</title>
+    <style>
+        :root {
+            --primary-cyan: #66FCF1;
+            --bg-dark: #0B0C10;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #1a1a1a; 
+            color: white; 
+            margin: 0; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden; 
+            user-select: none; 
+        }
+
+        /* KHUNG GIẢ LẬP ĐIỆN THOẠI */
+        #mobile-container {
+            width: 100vw;
+            height: 100vh;
+            max-width: 430px; 
+            max-height: 932px;
+            background: var(--bg-dark) url('b2.jpg') no-repeat center center;
+            background-size: cover;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+            border: 1px solid #333;
+        }
+
+        #top-bar { 
+            display: flex; 
+            flex-direction: column;
+            padding: 10px; 
+            background: rgba(0, 0, 0, 0.85); 
+            border-bottom: 2px solid var(--primary-cyan); 
+            z-index: 10; 
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        #game-title { 
+            font-size: 18px; 
+            color: var(--primary-cyan); 
+            font-weight: bold;
+            text-shadow: 0 0 5px var(--primary-cyan); 
+        }
+
+        /* KHÔNG GIAN THIÊN THẠCH RƠI */
+        #sky { 
+            position: relative; 
+            flex-grow: 1; 
+            width: 100%; 
+            overflow: hidden;
+        }
+
+        /* KHU VỰC ĐIỀU KHIỂN SÚNG (GRID 3 CỘT) */
+        #base { 
+            background: rgba(31, 40, 51, 0.95); 
+            border-top: 3px solid var(--primary-cyan); 
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            padding: 10px;
+            z-index: 5;
+        }
+
+        .turret-wrapper { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+        }
+
+        .cannon { font-size: 20px; margin-bottom: -5px; }
+
+        .btn-shoot { 
+            width: 100%; 
+            padding: 12px 0;
+            font-size: 16px; 
+            font-weight: bold; 
+            border-radius: 10px; 
+            border: 2px solid var(--primary-cyan); 
+            background-color: #1f2833; 
+            color: var(--primary-cyan); 
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        
+        .btn-shoot:active {
+            background-color: var(--primary-cyan);
+            color: black;
+            transform: scale(0.95);
+        }
+
+        /* ĐỐI TƯỢNG GAME */
+        .laser { 
+            position: absolute; background-color: #ff0000; height: 3px; 
+            transform-origin: left center; z-index: 4; 
+            box-shadow: 0 0 8px #ff0000; animation: laserFade 0.3s forwards; 
+            pointer-events: none; 
+        }
+
+        .meteor { 
+            position: absolute; display: flex; flex-direction: column; align-items: center; 
+            top: -80px; animation: fall linear forwards; z-index: 1; 
+            border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; 
+            padding: 5px; background: rgba(0,0,0,0.4); backdrop-filter: blur(3px); 
+        }
+        .meteor img { width: 45px; height: 45px; object-fit: contain; }
+        .meteor-text { background: #FFEB3B; color: #000; padding: 1px 4px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-top: 3px; }
+
+        /* MODALS */
+        .modal { 
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.95); flex-direction: column; align-items: center; 
+            justify-content: center; z-index: 1000; padding: 20px; text-align: center;
+            box-sizing: border-box;
+        }
+        .modal.active { display: flex; }
+        .modal h2 { font-size: 28px; color: var(--primary-cyan); margin-bottom: 15px; }
+        .action-btn { 
+            padding: 12px 30px; font-size: 18px; background: #ff9800; 
+            color: white; border: none; border-radius: 30px; cursor: pointer; font-weight: bold;
+        }
+
+        @keyframes fall { to { top: 100%; } }
+        @keyframes laserFade { 0% { opacity: 1; } 100% { opacity: 0; } }
+    </style>
+</head>
+<body>
+
+    <div id="mobile-container">
+        <div id="top-bar">
+            <div id="game-title">BẢO VỆ TRÍ NHỚ</div>
+            <div class="info-row">
+                <div id="lives-container">Mạng: <span id="lives" style="color: #ff4d4d;">❤️❤️❤️❤️❤️</span></div>
+                <div id="level-indicator">⭐</div>
+                <div id="score-container">Mục tiêu: <span id="score">0</span>/30</div>
+            </div>
+        </div>
+
+        <div id="sky"></div>
+        <div id="base"></div>
+
+        <div id="rule-modal" class="modal active">
+            <h2>🚀 LEVEL 2</h2>
+            <p style="font-size: 16px;">
+                - Nhìn <b>Hình ảnh</b> rơi xuống.<br>
+                - Bấm <b>Nút số</b> tương ứng để bắn hạ.<br>
+                - Đừng để chúng chạm vào căn cứ!
+            </p>
+            <button class="action-btn" onclick="startGame()">BẮT ĐẦU</button>
+        </div>
+
+        <div id="win-modal" class="modal">
+            <h2>XUẤT SẮC! 🚀</h2>
+            <p style="color: #4CAF50; font-size: 24px;">+ 400 ĐIỂM</p>
+            <button class="action-btn" onclick="window.location.href='lv3.html'">LEVEL 3</button>
+        </div>
+
+        <div id="lose-modal" class="modal">
+            <h2 style="color: #f44336;">THẤT BẠI!</h2>
+            <button class="action-btn" onclick="location.reload()">THỬ LẠI</button>
+        </div>
+    </div>
+
+    <script>
+        const bgMusic = new Audio('nhac-nen.mp3'); bgMusic.loop = true;
+        const reloadSound = new Audio('nap-dan.mp3');
+        const boomSound = new Audio('bum.mp3');
+        const wrongSound = new Audio('sai.mp3');
+        const victorySound = new Audio('chien-thang.mp3');
+
+        const gameData = [
+            { id: 0, label: "00", text: "Quả trứng" }, { id: 1, label: "01", text: "Cây dù" },
+            { id: 2, label: "02", text: "Con vịt" }, { id: 3, label: "03", text: "Trái tim" },
+            { id: 4, label: "04", text: "Cái ghế" }, { id: 5, label: "05", text: "Quả táo" },
+            { id: 6, label: "06", text: "Vỏ ốc" }, { id: 7, label: "07", text: "Cây rìu" },
+            { id: 8, label: "08", text: "Người tuyết" }, { id: 9, label: "09", text: "Hươu" },
+            { id: 10, label: "10", text: "Con heo" }
+        ];
+
+        let lives = 5; let score = 0; let gameActive = false;
+        let meteorQueue = []; let spawnInterval;
+        let fallSpeed = 7; let spawnTime = 2200;
+
+        // Tạo súng dựa trên Grid 3 cột
+        const base = document.getElementById('base');
+        gameData.forEach(item => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'turret-wrapper';
+            wrapper.innerHTML = `<button class="btn-shoot" onclick="shoot(${item.id})">${item.label}</button>
+                                 <div class="cannon" id="cannon-${item.id}">🗼</div>`;
+            base.appendChild(wrapper);
+        });
+
+        function startGame() {
+            document.getElementById('rule-modal').classList.remove('active');
+            gameActive = true; 
+            bgMusic.play().catch(e => console.log("Audio play blocked"));
+            startSpawning();
+        }
+
+        function startSpawning() {
+            clearInterval(spawnInterval);
+            spawnInterval = setInterval(spawnMeteor, spawnTime);
+        }
+
+        function spawnMeteor() {
+            if (!gameActive) return;
+            if (meteorQueue.length === 0) meteorQueue = [...gameData].sort(() => Math.random() - 0.5);
+            const item = meteorQueue.pop();
+            const meteor = document.createElement('div');
+            meteor.className = 'meteor';
+            meteor.dataset.id = item.id;
+            meteor.style.left = (Math.random() * 70 + 5) + '%';
+            meteor.style.animationDuration = fallSpeed + 's';
+            meteor.innerHTML = `<img src="${item.label}.png"><div class="meteor-text">${item.text}</div>`;
+            document.getElementById('sky').appendChild(meteor);
+            
+            meteor.addEventListener('animationend', () => {
+                if (document.body.contains(meteor)) { 
+                    meteor.remove(); 
+                    if(gameActive) takeDamage(); 
+                }
+            });
+        }
+
+        function shoot(id) {
+            if (!gameActive) return;
+            const cannon = document.getElementById('cannon-' + id);
+            const cRect = cannon.getBoundingClientRect();
+            reloadSound.currentTime = 0; reloadSound.play();
+
+            const targets = Array.from(document.getElementsByClassName('meteor')).filter(m => m.dataset.id == id);
+            if (targets.length > 0) {
+                const target = targets[0];
+                const tRect = target.getBoundingClientRect();
+                drawLaser(cRect.left + cRect.width/2, cRect.top, tRect.left + tRect.width/2, tRect.top + tRect.height/2);
+                target.remove();
+                boomSound.currentTime = 0; boomSound.play();
+                score++; document.getElementById('score').innerText = score;
+                checkDifficulty();
+            }
+        }
+
+        function drawLaser(x1, y1, x2, y2) {
+            // Tính toán vị trí laser tương đối trong mobile-container
+            const containerRect = document.getElementById('mobile-container').getBoundingClientRect();
+            const l = document.createElement('div');
+            const len = Math.hypot(x2-x1, y2-y1);
+            const ang = Math.atan2(y2-y1, x2-x1) * 180 / Math.PI;
+            
+            l.className = 'laser'; 
+            l.style.width = len + 'px'; 
+            l.style.left = (x1 - containerRect.left) + 'px';
+            l.style.top = (y1 - containerRect.top) + 'px'; 
+            l.style.transform = `rotate(${ang}deg)`;
+            document.getElementById('mobile-container').appendChild(l); 
+            setTimeout(() => l.remove(), 200);
+        }
+
+        function takeDamage() {
+            wrongSound.currentTime = 0; wrongSound.play();
+            lives--;
+            let h = ''; for(let i=0; i<lives; i++) h += '❤️';
+            document.getElementById('lives').innerText = h || '💀';
+            if (lives <= 0) handleLose();
+        }
+
+        function checkDifficulty() {
+            if (score >= 30) handleWin();
+            else if (score === 20) { fallSpeed = 4; spawnTime = 1200; startSpawning(); }
+            else if (score === 10) { fallSpeed = 5; spawnTime = 1600; startSpawning(); }
+        }
+
+        function handleWin() { gameActive = false; clearInterval(spawnInterval); victorySound.play(); document.getElementById('win-modal').classList.add('active'); }
+        function handleLose() { gameActive = false; clearInterval(spawnInterval); document.getElementById('lose-modal').classList.add('active'); }
+    </script>
+</body>
+</html>
