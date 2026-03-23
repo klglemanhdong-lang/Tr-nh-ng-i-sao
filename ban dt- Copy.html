@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bắn Tỉa Siêu Trí Nhớ - Mobile</title>
+    <style>
+        :root {
+            --bg-color: #f0f8ff;
+            --primary-red: #d32f2f;
+            --primary-green: #4CAF50;
+        }
+
+        /* Quy tắc 4: Mobile Simulator & Base Layout */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #2c3e50; /* Nền ngoài tối để nổi bật khung điện thoại */
+            margin: 0; 
+            padding: 0; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            user-select: none; 
+        }
+
+        /* Quy tắc 1: Cố định tỷ lệ Aspect Ratio 9/16 */
+        #game-container {
+            width: 100vw;
+            max-height: 100vh;
+            aspect-ratio: 9 / 16;
+            background: var(--bg-color) url('b1.jpg') no-repeat center center; 
+            background-size: cover;
+            position: relative;
+            margin: auto;
+            overflow: hidden;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            /* Tạo khung điện thoại giả lập trên Desktop */
+            border: 8px solid #333;
+            border-radius: 20px;
+            box-sizing: border-box;
+        }
+
+        @media (max-width: 500px) {
+            #game-container {
+                border: none;
+                border-radius: 0;
+            }
+        }
+
+        /* Quy tắc 3: Đơn vị đo lường linh hoạt */
+        h1 { 
+            color: var(--primary-red); 
+            text-transform: uppercase; 
+            font-size: 6vw; /* Chỉnh theo chiều rộng màn hình */
+            margin: 5% 0 2%;
+            text-shadow: 2px 2px 4px rgba(255,255,255,0.8); 
+        }
+
+        #timer-box { 
+            font-size: 4.5vw; 
+            font-weight: bold; 
+            color: #333; 
+            margin-bottom: 5%; 
+            background: rgba(255,255,255,0.7); 
+            display: inline-block; 
+            padding: 2% 5%; 
+            border-radius: 20px; 
+        }
+        
+        /* Grid cho các thẻ bài */
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2%;
+            padding: 0 4%;
+            margin-bottom: 5%;
+        }
+
+        .card { 
+            aspect-ratio: 3 / 4;
+            background-color: #fff; 
+            border: 2px solid var(--primary-green); 
+            border-radius: 8px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2); 
+            transition: transform 0.1s; 
+            position: relative; 
+            overflow: hidden;
+        }
+
+        .number-card { font-size: 6vw; color: #1976D2; font-weight: bold; }
+        .image-card { background-color: #FFF9C4; border-color: #FBC02D; }
+        .image-card img { width: 90%; height: 65%; object-fit: contain; }
+        .image-name { font-size: 2.5vw; color: #333; margin-top: 2px; }
+        
+        /* Hiệu ứng */
+        .selected::after { content: "🔫"; position: absolute; font-size: 8vw; z-index: 10; }
+        .burning { animation: burn 0.5s forwards; pointer-events: none; }
+        .broken::after { content: "💥"; position: absolute; font-size: 8vw; z-index: 10; }
+        .hidden-card { visibility: hidden; pointer-events: none; }
+        
+        /* Modals tối ưu cho Mobile */
+        .modal { 
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.95); color: white; flex-direction: column; 
+            align-items: center; justify-content: center; z-index: 2000; text-align: center;
+            padding: 10%; box-sizing: border-box;
+        }
+        .modal.active { display: flex; }
+        .modal h2 { font-size: 8vw; color: #FFEB3B; margin-bottom: 5%; }
+        .modal p { font-size: 4.5vw; line-height: 1.5; }
+        
+        button { 
+            padding: 4% 10%; font-size: 5vw; background-color: #ff9800; color: white; 
+            border: none; border-radius: 50px; cursor: pointer; font-weight: bold; 
+            margin-top: 10%; width: 80%;
+        }
+
+        .rank-bar { width: 80%; height: 20px; background: #333; border-radius: 10px; border: 1px solid #FFEB3B; margin: 5% 0; overflow: hidden; }
+        .rank-fill { width: 40%; height: 100%; background: linear-gradient(90deg, #FF9800, #FFEB3B); }
+
+        @keyframes burn { 100% { opacity: 0; transform: scale(0); } }
+        .shake { animation: shake 0.3s; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <h1>Bắn Tỉa Trí Nhớ</h1>
+        <div id="timer-box">Thời gian: <span id="time-left" style="color: red;">60</span>s</div>
+
+        <div id="top-grid" class="game-grid"></div>
+        <div style="height: 5vh;"></div> <div id="bottom-grid" class="game-grid"></div>
+
+        <div id="rule-modal" class="modal active">
+            <h2>📜 LUẬT CHƠI</h2>
+            <p>Chọn <b>Số</b> rồi chọn <b>Hình ảnh</b> tương ứng.<br><br>Thời gian: 1 phút.</p>
+            <button onclick="startGame()">BẮT ĐẦU</button>
+        </div>
+
+        <div id="win-modal" class="modal">
+            <h2>XUẤT SẮC! 🚀</h2>
+            <p style="color: #4CAF50; font-weight: bold; font-size: 7vw;">+ 400 ĐIỂM</p>
+            <div class="rank-bar"><div class="rank-fill"></div></div>
+            <button onclick="location.reload()">TIẾP TỤC</button>
+        </div>
+
+        <div id="lose-modal" class="modal">
+            <h2>TIẾC QUÁ! 😢</h2>
+            <p>Bạn đã hết thời gian rồi.</p>
+            <button onclick="location.reload()">THỬ LẠI</button>
+        </div>
+    </div>
+
+    <script>
+        // Giữ nguyên logic xử lý game của bạn, chỉ thay đổi IDs render
+        const gameData = [
+            { id: 0, label: "00", text: "Quả trứng" }, { id: 1, label: "01", text: "Cây dù" },
+            { id: 2, label: "02", text: "Con vịt" }, { id: 3, label: "03", text: "Trái tim" },
+            { id: 4, label: "04", text: "Cái ghế" }, { id: 5, label: "05", text: "Quả táo" },
+            { id: 6, label: "06", text: "Vỏ ốc" }, { id: 7, label: "07", text: "Cây rìu" }
+        ]; // Giảm bớt số lượng card để vừa khung 9:16 trên 1 màn hình
+
+        let selectedNumberId = null;
+        let selectedNumberElement = null;
+        let matchedPairs = 0;
+        let timeLeft = 60;
+        let timerInterval;
+
+        function startGame() {
+            document.getElementById('rule-modal').classList.remove('active');
+            renderBoard();
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function renderBoard() {
+            const topGrid = document.getElementById('top-grid');
+            const bottomGrid = document.getElementById('bottom-grid');
+            topGrid.innerHTML = ''; bottomGrid.innerHTML = '';
+
+            gameData.forEach(item => {
+                const numCard = document.createElement('div');
+                numCard.classList.add('card', 'number-card');
+                numCard.innerText = item.label;
+                numCard.onclick = () => {
+                    if (selectedNumberElement) selectedNumberElement.classList.remove('selected');
+                    selectedNumberId = item.id;
+                    selectedNumberElement = numCard;
+                    numCard.classList.add('selected');
+                };
+                topGrid.appendChild(numCard);
+            });
+
+            const shuffled = [...gameData].sort(() => Math.random() - 0.5);
+            shuffled.forEach(item => {
+                const imgCard = document.createElement('div');
+                imgCard.classList.add('card', 'image-card');
+                imgCard.innerHTML = `
+                    <img src="${item.label}.png" alt="${item.text}">
+                    <div class="image-name">${item.text}</div>`;
+                imgCard.onclick = () => handleMatch(item.id, imgCard);
+                bottomGrid.appendChild(imgCard);
+            });
+        }
+
+        function handleMatch(id, element) {
+            if (selectedNumberId === null) return;
+            if (selectedNumberId === id) {
+                element.classList.add('burning');
+                selectedNumberElement.classList.add('hidden-card');
+                setTimeout(() => {
+                    element.classList.add('hidden-card');
+                    matchedPairs++;
+                    if (matchedPairs === gameData.length) handleWin();
+                }, 500);
+            } else {
+                element.classList.add('shake');
+                setTimeout(() => element.classList.remove('shake'), 300);
+            }
+            selectedNumberId = null;
+            selectedNumberElement.classList.remove('selected');
+        }
+
+        function updateTimer() {
+            timeLeft--;
+            document.getElementById('time-left').innerText = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                document.getElementById('lose-modal').classList.add('active');
+            }
+        }
+
+        function handleWin() {
+            clearInterval(timerInterval);
+            document.getElementById('win-modal').classList.add('active');
+        }
+    </script>
+</body>
+</html>
