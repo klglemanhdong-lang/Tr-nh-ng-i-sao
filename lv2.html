@@ -50,15 +50,18 @@
         .meteor img { width: 50px; height: 50px; object-fit: contain; }
         .meteor-text { background: #FFEB3B; color: #000; padding: 1px 4px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-top: 3px; }
 
+        /* BỆ BẮN TỐI ƯU 2 HÀNG */
         #base { 
             background: rgba(31, 40, 51, 0.95); border-top: 3px solid var(--primary-cyan); 
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 10px; z-index: 5;
+            display: grid; 
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px; padding: 8px; z-index: 5;
         }
         .turret-wrapper { display: flex; flex-direction: column; align-items: center; }
-        .cannon { font-size: 20px; margin-bottom: -5px; }
+        .cannon { font-size: 14px; margin-bottom: -2px; }
         .btn-shoot { 
-            width: 100%; padding: 12px 0; font-size: 16px; font-weight: bold; 
-            border-radius: 10px; border: 2px solid var(--primary-cyan); 
+            width: 100%; padding: 8px 0; font-size: 13px; font-weight: bold; 
+            border-radius: 6px; border: 1.5px solid var(--primary-cyan); 
             background-color: #1f2833; color: var(--primary-cyan); cursor: pointer;
         }
         .btn-shoot:active { background: var(--primary-cyan); color: black; transform: scale(0.9); }
@@ -71,13 +74,6 @@
             text-shadow: 0 0 5px #fff; animation: pointsFly 1s forwards; z-index: 100;
         }
         @keyframes pointsFly { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-60px); opacity: 0; } }
-
-        .combo-effect { animation: comboZoom 0.8s forwards !important; }
-        @keyframes comboZoom {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.6); opacity: 0.8; filter: brightness(2); }
-            100% { transform: scale(2.2); opacity: 0; }
-        }
 
         .modal { 
             display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
@@ -162,25 +158,32 @@
             { id: 10, label: "10", text: "Con heo" }
         ];
 
-        let lives = 5; let score = 0; let combo = 0;
-        let gameActive = false; let startTime;
+        let lives = 5; let score = 0;
+        let gameActive = false; let isWon = false; // Thêm biến khóa thắng
+        let startTime;
         let meteorQueue = [];
         let spawnTimeout;
+
+        // --- TÍNH NĂNG TEST NHANH ---
+        window.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 't') handleWin();
+            if (e.key.toLowerCase() === 'l') handleLose();
+        });
 
         const base = document.getElementById('base');
         gameData.forEach(item => {
             const wrapper = document.createElement('div');
             wrapper.className = 'turret-wrapper';
-            wrapper.innerHTML = `<button class="btn-shoot" onclick="shoot(${item.id})">${item.label}</button>
-                                 <div class="cannon" id="cannon-${item.id}">🗼</div>`;
+            wrapper.innerHTML = `<div class="cannon" id="cannon-${item.id}">🗼</div>
+                                 <button class="btn-shoot" onclick="shoot(${item.id})">${item.label}</button>`;
             base.appendChild(wrapper);
         });
 
         function startGame() {
             document.getElementById('rule-modal').classList.remove('active');
-            gameActive = true;
+            gameActive = true; isWon = false;
             startTime = Date.now();
-            score = 0; combo = 0; lives = 5;
+            score = 0; lives = 5;
             document.getElementById('score').innerText = score;
             meteorQueue = [...gameData].sort(() => Math.random() - 0.5).slice(0, 10);
             updateLivesUI();
@@ -189,12 +192,12 @@
         }
 
         function spawnNext() {
-            if (!gameActive || meteorQueue.length === 0) return;
+            if (!gameActive || isWon || meteorQueue.length === 0) return;
             const item = meteorQueue.pop();
             const meteor = document.createElement('div');
             meteor.className = 'meteor';
             meteor.dataset.id = item.id;
-            meteor.dataset.dead = "false"; // Trạng thái thẻ
+            meteor.dataset.dead = "false";
             meteor.style.left = (Math.random() * 75 + 5) + '%';
             meteor.style.animation = `fall 10s linear forwards`; 
             meteor.innerHTML = `<img src="${item.label}.png"><div class="meteor-text">${item.text}</div>`;
@@ -202,67 +205,55 @@
 
             meteor.addEventListener('animationend', () => {
                 if (document.body.contains(meteor)) {
-                    // Chỉ trừ mạng nếu thẻ chưa bị bắn
-                    if(meteor.dataset.dead === "false") {
+                    if(meteor.dataset.dead === "false" && !isWon) {
                         takeDamage();
                     }
                     meteor.remove();
-                    checkGameState();
+                    // Đợi một chút để đảm bảo các xử lý khác hoàn tất
+                    setTimeout(checkGameState, 100);
                 }
             });
             spawnTimeout = setTimeout(spawnNext, 4500);
         }
 
         function shoot(id) {
-            if (!gameActive) return;
-            reloadSound.currentTime = 0; 
-            reloadSound.play().catch(() => {});
+            if (!gameActive || isWon) return;
+            reloadSound.currentTime = 0; reloadSound.play().catch(() => {});
             
-            // LỌC THÔNG MINH: Chỉ tìm các meteor CHƯA CHẾT và khớp ID
             const activeMeteors = Array.from(document.getElementsByClassName('meteor'))
                                 .filter(m => parseInt(m.dataset.id) === id && m.dataset.dead === "false");
             
             if (activeMeteors.length > 0) {
-                // Ưu tiên bắn thiên thạch rơi thấp nhất
-                const target = activeMeteors.reduce((prev, curr) => 
-                    (curr.offsetTop > prev.offsetTop) ? curr : prev
-                );
-                
-                target.dataset.dead = "true"; // Khóa thẻ ngay khi trúng
+                const target = activeMeteors.reduce((prev, curr) => (curr.offsetTop > prev.offsetTop) ? curr : prev);
+                target.dataset.dead = "true";
                 
                 const cannon = document.getElementById('cannon-' + id);
                 const cRect = cannon.getBoundingClientRect();
                 const tRect = target.getBoundingClientRect();
+                const containerRect = document.getElementById('mobile-container').getBoundingClientRect();
                 
-                drawLaser(cRect.left + cRect.width/2, cRect.top, tRect.left + tRect.width/2, tRect.top + tRect.height/2);
+                drawLaser(cRect.left + cRect.width/2 - containerRect.left, cRect.top - containerRect.top, tRect.left + tRect.width/2 - containerRect.left, tRect.top + tRect.height/2 - containerRect.top);
                 
                 score++;
-                combo++;
                 showPopup(target, "+30");
                 document.getElementById('score').innerText = score;
                 
-                boomSound.currentTime = 0; 
-                boomSound.play().catch(() => {});
+                boomSound.currentTime = 0; boomSound.play().catch(() => {});
 
-                if (combo >= 3) {
-                    target.classList.add('combo-effect');
-                    setTimeout(() => { 
-                        if(target.parentNode) target.remove(); 
-                        checkGameState(); 
-                    }, 800);
-                } else {
-                    // Thêm hiệu ứng nổ nhẹ trước khi xóa
-                    target.innerHTML = '<span style="font-size:50px">💥</span>';
-                    setTimeout(() => { 
-                        if(target.parentNode) target.remove(); 
-                        checkGameState(); 
-                    }, 200);
-                }
+                target.innerHTML = '<span style="font-size:50px">💥</span>';
                 
-                if (score === 10) setTimeout(handleWin, 500);
+                // KIỂM TRA THẮNG TRƯỚC KHI XÓA
+                if (score >= 10) {
+                    isWon = true;
+                    setTimeout(handleWin, 400);
+                }
+
+                setTimeout(() => { 
+                    if(target.parentNode) target.remove(); 
+                    if(!isWon) checkGameState(); 
+                }, 200);
+                
             } else {
-                // PHẠT KHI BẮN SAI: Bấm nút mà không có hình tương ứng đang rơi
-                combo = 0;
                 takeDamage();
             }
         }
@@ -286,17 +277,16 @@
             const ang = Math.atan2(y2-y1, x2-x1) * 180 / Math.PI;
             l.className = 'laser'; 
             l.style.width = len + 'px'; 
-            l.style.left = (x1 - containerRect.left) + 'px';
-            l.style.top = (y1 - containerRect.top) + 'px'; 
+            l.style.left = x1 + 'px';
+            l.style.top = y1 + 'px'; 
             l.style.transform = `rotate(${ang}deg)`;
             document.getElementById('mobile-container').appendChild(l); 
             setTimeout(() => l.remove(), 200);
         }
 
         function takeDamage() {
-            if(!gameActive) return;
-            wrongSound.currentTime = 0; 
-            wrongSound.play().catch(() => {});
+            if(!gameActive || isWon) return;
+            wrongSound.currentTime = 0; wrongSound.play().catch(() => {});
             lives--;
             updateLivesUI();
             document.getElementById('mobile-container').classList.add('shake');
@@ -310,10 +300,10 @@
         }
 
         function checkGameState() {
-            // Kiểm tra nếu đã hết thiên thạch mà chưa đủ 10 điểm
+            if (!gameActive || isWon) return;
             const remainingMeteors = document.querySelectorAll('.meteor[data-dead="false"]').length;
-            if (meteorQueue.length === 0 && remainingMeteors === 0 && score < 10 && lives > 0) {
-                setTimeout(handleLose, 1000);
+            if (meteorQueue.length === 0 && remainingMeteors === 0 && score < 10) {
+                handleLose();
             }
         }
 
@@ -329,7 +319,7 @@
         }
 
         function handleLose() {
-            if (!gameActive) return;
+            if (!gameActive || isWon) return;
             gameActive = false;
             clearTimeout(spawnTimeout);
             document.getElementById('lose-modal').classList.add('active');
