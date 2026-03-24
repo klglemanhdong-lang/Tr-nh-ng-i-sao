@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bắn Tỉa Siêu Trí Nhớ - Level 3</title>
+    <title>Bắn Tỉa Siêu Trí Nhớ - Vòng 1</title>
     <style>
         :root {
-            --card-width: 65px;
-            --card-height: 85px;
+            --card-width: 55px;
+            --card-height: 75px;
             --primary-red: #d32f2f;
             --gold: #FFD700;
         }
@@ -63,7 +63,7 @@
         #timer-bar-container {
             width: 100%; height: 22px; background: rgba(0,0,0,0.3);
             border-radius: 11px; overflow: hidden; position: relative;
-            margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.3);
+            margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.3);
         }
         #timer-bar-fill {
             height: 100%; width: 100%; background: linear-gradient(90deg, #4CAF50, #8BC34A);
@@ -75,8 +75,8 @@
         }
 
         .row { 
-            display: grid; grid-template-columns: repeat(3, 1fr); /* 9 thẻ chia 3 cột cân đối */
-            gap: 8px; justify-items: center; margin-bottom: 15px; padding: 0 5px;
+            display: grid; grid-template-columns: repeat(4, 1fr); 
+            gap: 8px; justify-items: center; margin-bottom: 20px; padding: 0 5px;
         }
 
         .card { 
@@ -87,10 +87,10 @@
             position: relative; transition: transform 0.1s;
         }
 
-        .number-card { font-size: 22px; color: #1976D2; font-weight: bold; }
+        .number-card { font-size: 20px; color: #1976D2; font-weight: bold; }
         .image-card { background-color: #FFF9C4; border-color: #FBC02D; }
         .image-card img { width: 85%; height: 55%; object-fit: contain; }
-        .image-name { font-size: 9px; color: #333; margin-top: 2px; text-align: center; line-height: 1; }
+        .image-name { font-size: 8px; color: #333; margin-top: 2px; text-align: center; }
 
         /* --- HIỆU ỨNG --- */
         .selected { border: 3px solid #FF5722 !important; transform: scale(1.05); }
@@ -142,14 +142,14 @@
     <div id="mobile-wrapper">
         <div id="start-screen">
             <div id="logo-title">BẮN TỈA TRÍ NHỚ</div>
-            <p style="color: var(--gold); margin-bottom: 15px;">Level 3: Ôn tập dãy số mới</p>
-            <img src="14-den-19.png" alt="Ôn tập" id="review-image" onerror="this.style.display='none'">
+            <p style="color: var(--gold); margin-bottom: 15px;">Vòng 1: Ôn tập 00-10</p>
+            <img src="0-den-10.png" alt="Ôn tập" id="review-image" onerror="this.style.display='none'">
             <button class="action-btn" onclick="startGame()">BẮT ĐẦU CHƠI</button>
         </div>
 
         <div id="game-ui">
             <div id="header">
-                <h1>LEVEL 3</h1>
+                <h1>VÒNG 1</h1>
                 <div id="lives-display">❤️❤️❤️</div>
             </div>
 
@@ -164,12 +164,12 @@
 
         <div id="win-modal" class="modal">
             <h2>QUÁ XUẤT SẮC! 🚀</h2>
-            <p>Bạn đã chinh phục Level 3</p>
+            <p>Bạn đã chinh phục Level 1</p>
             <div style="color: #4CAF50; font-size: 24px; font-weight: bold; margin: 10px 0;">+ 400 ĐIỂM</div>
             <p id="total-time-win" style="color: #ccc;">Thời gian: 0 giây</p>
             <div class="rank-bar"><div class="rank-fill" id="win-rank-fill"></div></div>
-            <p style="color: var(--gold);">Tiến trình: 1200 / 1600</p>
-            <button class="action-btn" onclick="window.location.href='lv4.html'">TIẾP TỤC LEVEL 4 ➔</button>
+            <p style="color: var(--gold);">Tiến trình: 400 / 800</p>
+            <button class="action-btn" onclick="window.location.href='lv2.html'">TĂNG CẤP 2 ➔</button>
         </div>
 
         <div id="lose-modal" class="modal">
@@ -186,17 +186,13 @@
         const wrongSound = new Audio('sai.mp3');
         const victorySound = new Audio('chien-thang.mp3');
 
-        // Danh sách số mới theo yêu cầu của bạn
         const gameData = [
-            { id: 3, label: "03", text: "Trái tim" },
-            { id: 6, label: "06", text: "Vỏ ốc" },
-            { id: 7, label: "07", text: "Cây rìu" },
-            { id: 8, label: "08", text: "Người tuyết" },
-            { id: 10, label: "10", text: "Con heo" },
-            { id: 14, label: "14", text: "Thuyền buồm" },
-            { id: 15, label: "15", text: "Túi tiền" },
-            { id: 17, label: "17", text: "Nốt nhạc" },
-            { id: 19, label: "19", text: "Con chó" }
+            { id: 0, label: "00", text: "Quả trứng" }, { id: 1, label: "01", text: "Cây dù" },
+            { id: 2, label: "02", text: "Con vịt" }, { id: 3, label: "03", text: "Trái tim" },
+            { id: 4, label: "04", text: "Cái ghế" }, { id: 5, label: "05", text: "Quả táo" },
+            { id: 6, label: "06", text: "Vỏ ốc" }, { id: 7, label: "07", text: "Cây rìu" },
+            { id: 8, label: "08", text: "Người tuyết" }, { id: 9, label: "09", text: "Hươu" },
+            { id: 10, label: "10", text: "Con heo" }
         ];
 
         let lives = 3;
@@ -226,7 +222,6 @@
             const top = document.getElementById('top-row');
             const bottom = document.getElementById('bottom-row');
             top.innerHTML = ''; bottom.innerHTML = '';
-
             gameData.forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'card number-card';
@@ -234,7 +229,6 @@
                 card.onclick = () => handleNumberClick(item.id, card);
                 top.appendChild(card);
             });
-
             const shuffled = [...gameData].sort(() => Math.random() - 0.5);
             shuffled.forEach(item => {
                 const card = document.createElement('div');
@@ -293,6 +287,7 @@
                     else { resetTurn(); startTimer(); }
                 }, comboCount >= 3 ? 800 : 500);
             } else {
+                // TÍNH NĂNG: CHỌN SAI BỊ TRỪ TIM
                 takeDamage();
                 comboCount = 0;
                 el.classList.add('shake');
@@ -344,7 +339,7 @@
             const time = Math.floor((Date.now() - totalStartTime) / 1000);
             document.getElementById('total-time-win').innerText = `Thời gian: ${time} giây`;
             document.getElementById('win-modal').classList.add('active');
-            setTimeout(() => document.getElementById('win-rank-fill').style.width = '75%', 500);
+            setTimeout(() => document.getElementById('win-rank-fill').style.width = '50%', 500);
             victorySound.play().catch(() => {});
         }
 
