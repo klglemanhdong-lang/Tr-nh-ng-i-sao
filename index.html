@@ -206,26 +206,22 @@
         let isAnimating = false;
 
         function startGame() {
-            console.log("Game Started");
             document.getElementById('start-screen').classList.add('hidden');
             document.getElementById('game-ui').classList.add('active');
-            
             lives = 3;
             matchedPairs = 0;
             comboCount = 0;
             totalStartTime = Date.now();
-            
             updateLivesUI();
             renderBoard();
             startTimer();
-            bgMusic.play().catch(() => console.log("Music blocked"));
+            bgMusic.play().catch(() => {});
         }
 
         function renderBoard() {
             const top = document.getElementById('top-row');
             const bottom = document.getElementById('bottom-row');
             top.innerHTML = ''; bottom.innerHTML = '';
-
             gameData.forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'card number-card';
@@ -233,7 +229,6 @@
                 card.onclick = () => handleNumberClick(item.id, card);
                 top.appendChild(card);
             });
-
             const shuffled = [...gameData].sort(() => Math.random() - 0.5);
             shuffled.forEach(item => {
                 const card = document.createElement('div');
@@ -248,7 +243,6 @@
             clearInterval(timerInterval);
             turnTimeLeft = 10;
             updateTimerUI();
-            
             timerInterval = setInterval(() => {
                 turnTimeLeft -= 0.1;
                 if (turnTimeLeft <= 0) {
@@ -284,10 +278,8 @@
                 boomSound.play().catch(() => {});
                 comboCount++;
                 showPopup(el);
-                
                 const pair = [el, selectedEl];
                 pair.forEach(c => c.classList.add(comboCount >= 3 ? 'combo-effect' : 'burning'));
-
                 setTimeout(() => {
                     pair.forEach(c => c.classList.add('hidden-card'));
                     matchedPairs++;
@@ -295,7 +287,8 @@
                     else { resetTurn(); startTimer(); }
                 }, comboCount >= 3 ? 800 : 500);
             } else {
-                wrongSound.play().catch(() => {});
+                // TÍNH NĂNG: CHỌN SAI BỊ TRỪ TIM
+                takeDamage();
                 comboCount = 0;
                 el.classList.add('shake');
                 setTimeout(() => {
@@ -317,19 +310,23 @@
             p.className = 'points-popup';
             p.innerText = '+30';
             const rect = el.getBoundingClientRect();
-            p.style.left = rect.left + "px";
-            p.style.top = rect.top + "px";
-            document.body.appendChild(p);
+            const wrapperRect = document.getElementById('mobile-wrapper').getBoundingClientRect();
+            p.style.left = (rect.left - wrapperRect.left) + "px";
+            p.style.top = (rect.top - wrapperRect.top) + "px";
+            document.getElementById('mobile-wrapper').appendChild(p);
             setTimeout(() => p.remove(), 1000);
         }
 
         function takeDamage() {
+            wrongSound.play().catch(() => {});
             lives--;
             updateLivesUI();
             document.getElementById('mobile-wrapper').classList.add('shake');
             setTimeout(() => document.getElementById('mobile-wrapper').classList.remove('shake'), 300);
             if (lives <= 0) handleLose();
-            else { resetTurn(); startTimer(); }
+            else { 
+                startTimer(); 
+            }
         }
 
         function updateLivesUI() {
