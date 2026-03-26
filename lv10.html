@@ -85,34 +85,21 @@
             flex-shrink: 0;
         }
 
-        /* START MODAL SPECIFIC */
-        #start-modal h2 { margin-top: 20px; margin-bottom: 10px; flex-shrink: 0; }
-        
         #review-grid {
             display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
             width: 95%; max-width: 380px; margin-bottom: 15px;
             flex-shrink: 0;
         }
         .review-item {
-            background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2);
+            background: white; border: 2px solid var(--theme-blue);
             border-radius: 8px; padding: 4px; aspect-ratio: 1;
             display: flex; align-items: center; justify-content: center;
         }
         .review-item img { width: 90%; height: 90%; object-fit: contain; }
 
-        #start-modal p {
-            font-size: 14px; margin: 0 0 10px 0; line-height: 1.4;
-            flex-shrink: 0;
-        }
-
-        /* WIN MODAL SPECIFIC */
-        #win-modal { justify-content: center; }
         #win-badge { width: 220px; margin-bottom: 15px; filter: drop-shadow(0 0 15px var(--gold)); }
         .rank-bar { width: 80%; height: 12px; background: #333; border-radius: 10px; margin: 15px 0; border: 1px solid var(--gold); overflow: hidden; }
         .rank-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #FFE082, var(--gold)); transition: width 1.5s; }
-
-        /* LOSE MODAL SPECIFIC */
-        #lose-modal { justify-content: center; }
 
         .shake { animation: shake 0.3s; }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
@@ -142,29 +129,29 @@
         </div>
 
         <div id="start-modal" class="modal active">
-            <h2 style="color: var(--theme-blue);">TRÍ NHỚ PRO</h2>
+            <h2 style="color: var(--theme-blue);">ÔN TẬP LEVEL 10</h2>
             <div id="review-grid">
-                <!-- Hình ảnh ôn tập sẽ được JS chèn vào đây[cite: 3] -->
+                <!-- Tài nguyên ảnh a[số].png sẽ tự động chèn vào đây -->
             </div>
-            <p>Đảm bảo bạn đã ôn tập kỹ.<br>
+            <p>Ghi nhớ các cặp số và hình ảnh.<br>
             <span style="color: #FF5252;">Thất bại:</span> Về Level 7. <span style="color: var(--gold);">Chiến thắng:</span> Nhận huy hiệu.</p>
-            <button class="action-btn" onclick="initGame()">Tôi sẵn sàng</button>
+            <button class="action-btn" onclick="initGame()">Bắt đầu chiến đấu</button>
         </div>
 
         <div id="win-modal" class="modal">
             <img src="5tridungsongtoan.png" id="win-badge">
-            <h2 style="color: var(--gold);">Trí nhớ tuyệt vời !</h2>
+            <h2 style="color: var(--gold);">Trí dũng song toàn!</h2>
             <div style="color: #4CAF50; font-size: 26px; font-weight: bold;">+ 1000 ĐIỂM</div>
             <p id="total-time-win" style="color: #ccc;">Hoàn thành trong: 0 giây</p>
             <div class="rank-bar"><div class="rank-fill" id="win-rank-fill"></div></div>
             <p style="color: var(--gold);">Tiến trình: 4800 / 4800</p>
-            <button class="action-btn" onclick="window.location.href='lv11.html'">Chinh phục cấp độ mới</button>
+            <button class="action-btn" onclick="window.location.href='lv11.html'">Tiếp tục Level 11</button>
         </div>
 
         <div id="lose-modal" class="modal">
-            <h2 style="color: #FF5252; font-size: 28px;">THẤT BẠI!</h2>
-            <p style="font-size: 18px;">Bạn cần rèn luyện lại mốc quan trọng.<br>Đang đưa bạn về Level 7...</p>
-            <button class="action-btn" onclick="window.location.href='lv7.html'">Quay lại ngay</button>
+            <h2 style="color: #FF5252; font-size: 28px;">GAME OVER</h2>
+            <p style="font-size: 18px;">Bạn cần rèn luyện lại từ mốc Level 7...</p>
+            <button class="action-btn" onclick="window.location.href='lv7.html'">Quay lại</button>
         </div>
     </div>
 
@@ -176,6 +163,7 @@
         const wrongSound = new Audio('sai.mp3');
         const victorySound = new Audio('chien-thang.mp3');
 
+        // Danh sách số cần ôn tập và thi đấu
         const rawNumbers = ["03", "06", "08", "07", "10", "14", "15", "17", "19", "20", "21", "23", "25", "26", "28", "32", "34", "35", "38", "39"];
 
         let gameQuestions = [];
@@ -186,17 +174,31 @@
         let gameActive = false;
         let startTime;
 
+        // --- HỆ THỐNG CHUYỂN LEVEL NHANH (00-99) ---
+        let inputBuffer = "";
+        let inputTimeout;
+        window.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 't') handleWin();
+            if (e.key.toLowerCase() === 'l') handleLose();
+            if (e.key >= '0' && e.key <= '9') {
+                clearTimeout(inputTimeout);
+                inputBuffer += e.key;
+                if (inputBuffer.length === 2) {
+                    let levelNum = parseInt(inputBuffer, 10);
+                    window.location.href = (levelNum === 10) ? location.reload() : `lv${levelNum}.html`;
+                    inputBuffer = "";
+                }
+                inputTimeout = setTimeout(() => { inputBuffer = ""; }, 800);
+            }
+        });
+
+        // --- TỰ ĐỘNG SINH ẢNH ÔN TẬP (CÔNG THỨC: a[số].png) ---
         const reviewGrid = document.getElementById('review-grid');
         rawNumbers.forEach(num => {
             const div = document.createElement('div');
             div.className = 'review-item';
-            div.innerHTML = `<img src="a${num}.png">`; // Sử dụng ảnh a[số].png[cite: 3]
+            div.innerHTML = `<img src="a${num}.png" alt="${num}">`; 
             reviewGrid.appendChild(div);
-        });
-
-        window.addEventListener('keydown', (e) => {
-            if (e.key.toLowerCase() === 't') handleWin();
-            if (e.key.toLowerCase() === 'l') handleLose();
         });
 
         function initGame() {
@@ -226,7 +228,8 @@
 
             for (let i = 0; i < 4; i++) {
                 const card = document.getElementById(`opt-${i}`);
-                card.innerHTML = `<img src="${options[i]}.png">`; // Sử dụng ảnh [số].png[cite: 3]
+                // Khi chơi vẫn dùng file [số].png như cũ
+                card.innerHTML = `<img src="${options[i]}.png">`; 
                 card.dataset.number = options[i];
                 card.className = 'option-card';
             }
