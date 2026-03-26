@@ -87,15 +87,13 @@
         <div id="timer-container"><div id="timer-fill"></div></div>
 
         <div id="game-board">
-            <!-- Hàng Số: 2 thẻ 50, 2 thẻ 58, 2 thẻ 59 -->
             <div class="grid-layout" id="num-grid"></div>
             <div style="height: 15px;"></div>
-            <!-- Hàng Hình: 2 thẻ 50, 2 thẻ 58, 2 thẻ 59 -->
             <div class="grid-layout" id="img-grid"></div>
         </div>
 
         <div id="start-modal" class="modal active">
-            <h2 style="color: var(--theme-blue);">ÔN TẬP 50 - 58 - 59</h2>
+            <h2 style="color: var(--theme-blue);">LEVEL 13:MÃ HÓA 50 - 58 - 59</h2>
             <div id="review-grid"></div>
             <p>Mỗi cặp sẽ xuất hiện 2 lần.<br>Hãy bắn hạ tất cả các thẻ!</p>
             <button class="action-btn" onclick="startGame()">BẮT ĐẦU</button>
@@ -121,14 +119,12 @@
         const wrongSound = new Audio('sai.mp3');
         const victorySound = new Audio('chien-thang.mp3');
 
-        // Gốc
         const baseData = [
             { id: 50, text: "Xe đạp" },
             { id: 58, text: "Chú hề" },
             { id: 59, text: "Con mèo" }
         ];
 
-        // Nhân đôi dữ liệu để mỗi cặp xuất hiện 2 lần (6 thẻ số, 6 thẻ hình)
         const gameData = [...baseData, ...baseData];
 
         let lives = 3;
@@ -136,19 +132,38 @@
         let selectedId = null;
         let selectedEl = null;
         let timer;
-        let timeLeft = 12; // Tăng thêm 2 giây vì có tới 12 thẻ
+        let timeLeft = 12;
         let isAnimating = false;
 
-        // Load Review: a[số].png
+        // --- HỆ THỐNG GÕ PHÍM CHUYỂN LEVEL NHANH ---
+        let inputBuffer = "";
+        let inputTimeout;
+
+        window.addEventListener('keydown', (e) => {
+            // Phím tắt Test
+            if (e.key.toLowerCase() === 't') handleWin();
+            if (e.key.toLowerCase() === 'l') handleLose();
+
+            // Chuyển level bằng số (gõ 2 chữ số nhanh)
+            if (e.key >= '0' && e.key <= '9') {
+                clearTimeout(inputTimeout);
+                inputBuffer += e.key;
+
+                if (inputBuffer.length === 2) {
+                    const levelNum = parseInt(inputBuffer);
+                    window.location.href = `lv${levelNum}.html`;
+                    inputBuffer = "";
+                }
+
+                inputTimeout = setTimeout(() => {
+                    inputBuffer = "";
+                }, 800); 
+            }
+        });
+
         const rGrid = document.getElementById('review-grid');
         baseData.forEach(d => {
             rGrid.innerHTML += `<div class="review-item"><img src="a${d.id}.png"></div>`;
-        });
-
-        // Test Nhanh
-        window.addEventListener('keydown', (e) => {
-            if (e.key.toLowerCase() === 't') handleWin();
-            if (e.key.toLowerCase() === 'l') handleLose();
         });
 
         function startGame() {
@@ -161,12 +176,10 @@
         function initBoard() {
             const numGrid = document.getElementById('num-grid');
             const imgGrid = document.getElementById('img-grid');
-            
-            // Trộn ngẫu nhiên
             const nums = [...gameData].sort(() => Math.random() - 0.5);
             const imgs = [...gameData].sort(() => Math.random() - 0.5);
 
-            nums.forEach((d, index) => {
+            nums.forEach((d) => {
                 const card = document.createElement('div');
                 card.className = 'card card-num';
                 card.innerText = d.id;
@@ -174,7 +187,7 @@
                 numGrid.appendChild(card);
             });
 
-            imgs.forEach((d, index) => {
+            imgs.forEach((d) => {
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.innerHTML = `<img src="${d.id}.png"><div class="card-label">${d.text}</div>`;
@@ -188,7 +201,7 @@
             clearInterval(timer);
             timer = setInterval(() => {
                 timeLeft -= 0.1;
-                document.getElementById('timer-fill').style.width = (timeLeft / 1.2 * 10) + "%";
+                document.getElementById('timer-fill').style.width = (timeLeft / 12 * 100) + "%";
                 if (timeLeft <= 0) {
                     clearInterval(timer);
                     takeDamage();
