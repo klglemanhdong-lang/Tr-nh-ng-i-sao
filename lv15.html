@@ -71,6 +71,23 @@
     const boomSound = new Audio('bum.mp3');
     const wrongSound = new Audio('sai.mp3');
 
+    // --- TÍNH NĂNG CHUYỂN LEVEL NHANH ---
+    let inputBuffer = "";
+    let inputTimeout;
+
+    window.addEventListener('keydown', (e) => {
+        if (e.key >= '0' && e.key <= '9') {
+            clearTimeout(inputTimeout);
+            inputBuffer += e.key;
+            if (inputBuffer.length === 2) {
+                const levelNum = parseInt(inputBuffer);
+                window.location.href = `lv${levelNum}.html`;
+                inputBuffer = "";
+            }
+            inputTimeout = setTimeout(() => { inputBuffer = ""; }, 800);
+        }
+    });
+
     const data = [
         { id: 62, num: "62", img: "62.png", txt: "Điện thoại" },
         { id: 64, num: "64", img: "64.png", txt: "Người lính" },
@@ -80,7 +97,6 @@
 
     let lives = 3, timeLeft = 10, matched = 0, timer, selected = null;
 
-    // Hiển thị thẻ ôn tập
     const rList = document.getElementById('review-list');
     data.forEach(i => {
         rList.innerHTML += `<div class="review-card"><b>${i.num}</b><img src="${i.img}"><span>${i.txt}</span></div>`;
@@ -96,7 +112,6 @@
 
     function renderCards() {
         const grid = document.getElementById('card-grid');
-        // Tạo 4 thẻ số và 4 thẻ hình (Tổng 8)
         let cards = [];
         data.forEach(i => {
             cards.push({ id: i.id, type: 'num', content: `<span>${i.num}</span>` });
@@ -122,7 +137,6 @@
             el.classList.add('selected');
         } else {
             if (selected.id === id) {
-                // ĐÚNG
                 boomSound.currentTime = 0; boomSound.play();
                 el.classList.add('hidden-card');
                 selected.el.classList.add('hidden-card');
@@ -131,7 +145,6 @@
                 if (matched === 4) handleWin();
                 else resetTimer();
             } else {
-                // SAI
                 takeDamage();
                 el.classList.add('shake');
                 setTimeout(() => {
