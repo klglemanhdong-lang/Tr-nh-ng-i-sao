@@ -113,6 +113,8 @@
         }
         @keyframes pointsFly { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-60px); opacity: 0; } }
 
+        .hidden-card { visibility: hidden; pointer-events: none; }
+
         /* --- MODALS --- */
         .modal { 
             display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
@@ -206,8 +208,25 @@
         let selectedEl = null;
         let isAnimating = false;
 
-        // TEST NHANH: T = Thắng, L = Thua
+        // --- HỆ THỐNG CHUYỂN LEVEL NHANH (00-99) ---
+        let inputBuffer = "";
+        let inputTimeout;
+
         window.addEventListener('keydown', (e) => {
+            // Logic chuyển level nhanh
+            if (e.key >= '0' && e.key <= '9') {
+                clearTimeout(inputTimeout);
+                inputBuffer += e.key;
+                if (inputBuffer.length === 2) {
+                    let levelNum = parseInt(inputBuffer);
+                    if (levelNum === 5) location.reload();
+                    else window.location.href = `lv${levelNum}.html`;
+                    inputBuffer = "";
+                }
+                inputTimeout = setTimeout(() => { inputBuffer = ""; }, 800);
+            }
+
+            // TEST NHANH: T = Thắng, L = Thua
             if (e.key.toLowerCase() === 't') handleWin();
             if (e.key.toLowerCase() === 'l') handleLose();
         });
@@ -264,6 +283,7 @@
         function handleNumberClick(id, el) {
             if (isAnimating || el.classList.contains('hidden-card')) return;
             if (selectedEl) selectedEl.classList.remove('selected');
+            reloadSound.currentTime = 0;
             reloadSound.play().catch(() => {});
             selectedId = id; selectedEl = el; el.classList.add('selected');
         }
@@ -272,6 +292,7 @@
             if (isAnimating || selectedId === null || el.classList.contains('hidden-card')) return;
             isAnimating = true;
             if (selectedId === id) {
+                boomSound.currentTime = 0;
                 boomSound.play().catch(() => {});
                 comboCount++;
                 showPopup(el);
@@ -307,6 +328,7 @@
         }
 
         function takeDamage() {
+            wrongSound.currentTime = 0;
             wrongSound.play().catch(() => {});
             lives--; updateLivesUI();
             document.getElementById('mobile-wrapper').classList.add('shake');
@@ -325,7 +347,6 @@
             document.getElementById('total-time-win').innerText = `Thời gian: ${time} giây`;
             document.getElementById('game-ui').classList.remove('active');
             document.getElementById('win-modal').classList.add('active');
-            // Thanh điểm chạy đến 80% (1600/2000)
             setTimeout(() => document.getElementById('win-rank-fill').style.width = '80%', 500);
             victorySound.play().catch(() => {});
         }
