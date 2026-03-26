@@ -120,9 +120,9 @@
         <div id="base"></div>
 
         <div id="rule-modal" class="modal active">
-            <h2 style="color: var(--gold);">MÀN THĂNG CẤP - TẬP TRUNG</h2>
+            <h2 style="color: var(--gold);">Level 2 - MÀN THĂNG CẤP</h2>
             <img src="0-den-10.png" id="review-img" alt="Ôn tập">
-            <p>Bắn hạ 10 mục tiêu để bảo vệ căn cứ!</p>
+            <p>Bắn hạ 10 mục tiêu 00-10 bảo vệ căn cứ!</p>
             <button class="action-btn" onclick="startGame()">BẮT ĐẦU NGAY</button>
         </div>
 
@@ -159,15 +159,41 @@
         ];
 
         let lives = 5; let score = 0;
-        let gameActive = false; let isWon = false; // Thêm biến khóa thắng
+        let gameActive = false; let isWon = false; 
         let startTime;
         let meteorQueue = [];
         let spawnTimeout;
 
-        // --- TÍNH NĂNG TEST NHANH ---
+        // --- HỆ THỐNG PHÍM TẮT & CHUYỂN LEVEL ---
+        let inputBuffer = "";
+        let inputTimeout;
+
         window.addEventListener('keydown', (e) => {
-            if (e.key.toLowerCase() === 't') handleWin();
-            if (e.key.toLowerCase() === 'l') handleLose();
+            const key = e.key.toLowerCase();
+            
+            // 1. Test nhanh Thắng/Thua
+            if (key === 't') {
+                if(!gameActive) startGame(); // Nếu chưa start thì start luôn để tránh lỗi logic
+                handleWin();
+                return;
+            }
+            if (key === 'l') {
+                handleLose();
+                return;
+            }
+
+            // 2. Chuyển hướng nhanh theo số (00-99)
+            if (e.key >= '0' && e.key <= '9') {
+                clearTimeout(inputTimeout);
+                inputBuffer += e.key;
+                if (inputBuffer.length === 2) {
+                    let levelNum = parseInt(inputBuffer);
+                    if (levelNum === 2) location.reload();
+                    else window.location.href = `lv${levelNum}.html`;
+                    inputBuffer = "";
+                }
+                inputTimeout = setTimeout(() => { inputBuffer = ""; }, 1000);
+            }
         });
 
         const base = document.getElementById('base');
@@ -209,7 +235,6 @@
                         takeDamage();
                     }
                     meteor.remove();
-                    // Đợi một chút để đảm bảo các xử lý khác hoàn tất
                     setTimeout(checkGameState, 100);
                 }
             });
@@ -242,7 +267,6 @@
 
                 target.innerHTML = '<span style="font-size:50px">💥</span>';
                 
-                // KIỂM TRA THẮNG TRƯỚC KHI XÓA
                 if (score >= 10) {
                     isWon = true;
                     setTimeout(handleWin, 400);
@@ -271,7 +295,6 @@
         }
 
         function drawLaser(x1, y1, x2, y2) {
-            const containerRect = document.getElementById('mobile-container').getBoundingClientRect();
             const l = document.createElement('div');
             const len = Math.hypot(x2-x1, y2-y1);
             const ang = Math.atan2(y2-y1, x2-x1) * 180 / Math.PI;
@@ -308,10 +331,10 @@
         }
 
         function handleWin() {
-            if (!gameActive) return;
             gameActive = false;
+            isWon = true;
             clearTimeout(spawnTimeout);
-            const time = Math.floor((Date.now() - startTime) / 1000);
+            const time = Math.floor((Date.now() - (startTime || Date.now())) / 1000);
             document.getElementById('total-time').innerText = `Thời gian: ${time}s`;
             document.getElementById('win-modal').classList.add('active');
             setTimeout(() => document.getElementById('progress-fill').style.width = "100%", 500);
@@ -319,7 +342,7 @@
         }
 
         function handleLose() {
-            if (!gameActive || isWon) return;
+            if (isWon) return;
             gameActive = false;
             clearTimeout(spawnTimeout);
             document.getElementById('lose-modal').classList.add('active');
