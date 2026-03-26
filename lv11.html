@@ -126,10 +126,8 @@
     <div id="mobile-wrapper">
         <div id="start-screen">
             <div id="logo-title">LEVEL 11: ÔN TẬP 4x</div>
-            <p style="color: var(--gold); margin-bottom: 15px;">Quy ước ôn tập: a[SỐ].png</p>
-            <div id="review-grid">
-                <!-- Chèn ảnh ôn tập bằng JavaScript -->
-            </div>
+            <p style="color: var(--gold); margin-bottom: 15px;">ÔN TẬP CÁC SỐ 43.44.46.48.49</p>
+            <div id="review-grid"></div>
             <button class="action-btn" onclick="startGame()">BẮT ĐẦU CHƠI</button>
         </div>
 
@@ -199,10 +197,30 @@
         let selectedEl = null;
         let isAnimating = false;
 
-        // TEST NHANH
+        // --- HỆ THỐNG GÕ PHÍM SỐ CHUYỂN LEVEL ---
+        let inputBuffer = "";
+        let inputTimeout;
+
         window.addEventListener('keydown', (e) => {
+            // Debug phím tắt
             if (e.key.toLowerCase() === 't') handleWin();
             if (e.key.toLowerCase() === 'l') handleLose();
+
+            // Chuyển Level nhanh 00-99
+            if (e.key >= '0' && e.key <= '9') {
+                clearTimeout(inputTimeout);
+                inputBuffer += e.key;
+
+                if (inputBuffer.length === 2) {
+                    const levelNum = parseInt(inputBuffer);
+                    window.location.href = `lv${levelNum}.html`;
+                    inputBuffer = "";
+                }
+
+                inputTimeout = setTimeout(() => {
+                    inputBuffer = "";
+                }, 800); // Reset buffer sau 0.8s nếu không gõ tiếp
+            }
         });
 
         function startGame() {
@@ -221,7 +239,6 @@
             const bottom = document.getElementById('bottom-row');
             top.innerHTML = ''; bottom.innerHTML = '';
 
-            // Hàng trên: Số (Hiển thị text)
             gameData.sort(() => Math.random() - 0.5).forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'card number-card';
@@ -230,7 +247,6 @@
                 top.appendChild(card);
             });
 
-            // Hàng dưới: Hình mã hóa theo quy ước [số].png
             const shuffled = [...gameData].sort(() => Math.random() - 0.5);
             shuffled.forEach(item => {
                 const card = document.createElement('div');
@@ -303,7 +319,7 @@
             wrongSound.currentTime = 0; wrongSound.play().catch(() => {});
             lives--; updateLivesUI();
             document.getElementById('mobile-wrapper').classList.add('shake');
-            setTimeout(() => document.getElementById('mobile-container').classList.remove('shake'), 300);
+            setTimeout(() => document.getElementById('mobile-wrapper').classList.remove('shake'), 300);
             if (lives <= 0) handleLose();
             else startTimer();
         }
