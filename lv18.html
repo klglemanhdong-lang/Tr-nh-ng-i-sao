@@ -57,7 +57,7 @@
         }
         .modal.active { display: flex; }
 
-        /* Ôn tập - 16 ảnh xếp gọn trên 1 màn hình */
+        /* Ôn tập */
         .review-grid { 
             display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; 
             width: 100%; margin: 10px 0;
@@ -95,15 +95,13 @@
 
     <div id="grid"></div>
 
-    <!-- MÀN HÌNH ÔN TẬP - KHÔNG THANH CUỘN -->
     <div id="review-modal" class="modal active">
-        <h2 style="color: var(--electric); margin-top: 0;">CAO THỦ TRÍ NHỚ</h2>
+        <h2 style="color: var(--electric); margin-top: 0;">LEVEL 18: CAO THỦ TRÍ NHỚ</h2>
         <div class="review-grid" id="review-list"></div>
         <p style="font-size: 14px; margin: 10px 0;">Ghi nhớ 16 cặp thẻ trong 1 màn hình!</p>
         <button class="action-btn" onclick="startGame()">BẮT ĐẦU NGAY</button>
     </div>
 
-    <!-- MÀN HÌNH THẮNG -->
     <div id="win-modal" class="modal">
         <img src="7caothudanloi.png" id="badge-img" alt="Cao Thủ">
         <h1 style="color: var(--gold); margin: 0;">BÁI PHỤC CAO THỦ!</h1>
@@ -120,7 +118,6 @@
         <button class="action-btn" style="margin-top: 15px;" onclick="window.location.href='lv19.html'">LEVEL 19 ➔</button>
     </div>
 
-    <!-- MÀN HÌNH THUA -->
     <div id="lose-modal" class="modal">
         <h1 style="color: #ff5252;">THẤT BẠI!</h1>
         <p>16 cặp thẻ là một thử thách lớn. Thử lại nhé!</p>
@@ -133,7 +130,28 @@
     const zapSound = new Audio('bum.mp3');
     const wrongSound = new Audio('sai.mp3');
 
-    // Số đã sắp xếp nhỏ -> lớn
+    // --- TÍNH NĂNG CHUYỂN LEVEL NHANH ---
+    let inputBuffer = "";
+    let inputTimeout;
+
+    window.addEventListener('keydown', (e) => {
+        // Phím tắt Test
+        if (e.key.toLowerCase() === 't') handleWin();
+        if (e.key.toLowerCase() === 'l') handleLose();
+
+        // Nhận diện gõ 2 chữ số
+        if (e.key >= '0' && e.key <= '9') {
+            clearTimeout(inputTimeout);
+            inputBuffer += e.key;
+            if (inputBuffer.length === 2) {
+                const levelNum = parseInt(inputBuffer);
+                window.location.href = `lv${levelNum}.html`;
+                inputBuffer = "";
+            }
+            inputTimeout = setTimeout(() => { inputBuffer = ""; }, 800);
+        }
+    });
+
     const gameNumbers = [32, 34, 35, 38, 39, 43, 44, 46, 48, 49, 50, 58, 62, 64, 65, 69];
     const dataDetails = {
         32: "Vòi sen", 34: "Dưa hấu", 35: "Đu đủ", 38: "Nhẫn", 39: "Tê giác",
@@ -152,13 +170,6 @@
     }
     window.addEventListener('resize', resize); resize();
 
-    // TEST NHANH
-    window.addEventListener('keydown', (e) => {
-        if (e.key.toLowerCase() === 't') handleWin();
-        if (e.key.toLowerCase() === 'l') handleLose();
-    });
-
-    // Render Ôn tập (4x4 = 16 ảnh) - Dùng a[số].png
     const rList = document.getElementById('review-list');
     gameNumbers.forEach(num => {
         rList.innerHTML += `<div class="rev-item"><img src="a${num}.png"></div>`;
