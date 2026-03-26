@@ -122,7 +122,7 @@
         <div id="base"></div>
 
         <div id="rule-modal" class="modal active">
-            <h2 style="color: var(--gold);">THỬ THÁCH - CẤP VÀNG</h2>
+            <h2 style="color: var(--gold);">LEVEL 6- ÔN TẬP</h2>
             <img src="20-den-28.png" id="review-img" alt="Ôn tập">
             <p>Phá hủy 12 thiên thạch để nhận HUY HIỆU VÀNG!</p>
             <button class="action-btn" onclick="startGame()">BẮT ĐẦU NGAY</button>
@@ -172,10 +172,31 @@
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
-        // --- TÍNH NĂNG TEST NHANH ---
+        // --- HỆ THỐNG LẮNG NGHE BÀN PHÍM CHUYỂN LEVEL & TEST NHANH ---
+        let inputBuffer = "";
+        let inputTimeout;
+
         window.addEventListener('keydown', (e) => {
+            // Test nhanh win/lose
             if (e.key.toLowerCase() === 't') handleWin();
             if (e.key.toLowerCase() === 'l') handleLose();
+
+            // Chuyển level nhanh
+            if (e.key >= '0' && e.key <= '9') {
+                clearTimeout(inputTimeout);
+                inputBuffer += e.key;
+                if (inputBuffer.length === 2) {
+                    let levelNum = parseInt(inputBuffer, 10);
+                    if (levelNum === 6) {
+                        location.reload(); // Nếu gõ 06 thì tải lại chính trang này
+                    } else {
+                        window.location.href = `lv${levelNum}.html`;
+                    }
+                    inputBuffer = "";
+                }
+                // Hủy buffer nếu gõ quá chậm (sau 800ms)
+                inputTimeout = setTimeout(() => { inputBuffer = ""; }, 800);
+            }
         });
 
         const base = document.getElementById('base');
