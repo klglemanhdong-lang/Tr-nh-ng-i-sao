@@ -91,7 +91,7 @@
             flex-shrink: 0;
         }
         .review-item {
-            background: white; border: 2px solid var(--theme-blue);
+            background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2);
             border-radius: 8px; padding: 4px; aspect-ratio: 1;
             display: flex; align-items: center; justify-content: center;
         }
@@ -129,29 +129,27 @@
         </div>
 
         <div id="start-modal" class="modal active">
-            <h2 style="color: var(--theme-blue);">ÔN TẬP LEVEL 10</h2>
-            <div id="review-grid">
-                <!-- Tài nguyên ảnh a[số].png sẽ tự động chèn vào đây -->
-            </div>
-            <p>Ghi nhớ các cặp số và hình ảnh.<br>
+            <h2 style="color: var(--theme-blue);">TRÍ NHỚ PRO</h2>
+            <div id="review-grid"></div>
+            <p>Đảm bảo bạn đã ôn tập kỹ.<br>
             <span style="color: #FF5252;">Thất bại:</span> Về Level 7. <span style="color: var(--gold);">Chiến thắng:</span> Nhận huy hiệu.</p>
-            <button class="action-btn" onclick="initGame()">Bắt đầu chiến đấu</button>
+            <button class="action-btn" onclick="initGame()">Tôi sẵn sàng</button>
         </div>
 
         <div id="win-modal" class="modal">
             <img src="5tridungsongtoan.png" id="win-badge">
-            <h2 style="color: var(--gold);">Trí dũng song toàn!</h2>
+            <h2 style="color: var(--gold);">Trí nhớ tuyệt vời !</h2>
             <div style="color: #4CAF50; font-size: 26px; font-weight: bold;">+ 1000 ĐIỂM</div>
             <p id="total-time-win" style="color: #ccc;">Hoàn thành trong: 0 giây</p>
             <div class="rank-bar"><div class="rank-fill" id="win-rank-fill"></div></div>
             <p style="color: var(--gold);">Tiến trình: 4800 / 4800</p>
-            <button class="action-btn" onclick="window.location.href='lv11.html'">Tiếp tục Level 11</button>
+            <button class="action-btn" onclick="window.location.href='lv11.html'">Chinh phục cấp độ mới</button>
         </div>
 
         <div id="lose-modal" class="modal">
-            <h2 style="color: #FF5252; font-size: 28px;">GAME OVER</h2>
-            <p style="font-size: 18px;">Bạn cần rèn luyện lại từ mốc Level 7...</p>
-            <button class="action-btn" onclick="window.location.href='lv7.html'">Quay lại</button>
+            <h2 style="color: #FF5252; font-size: 28px;">THẤT BẠI!</h2>
+            <p style="font-size: 18px;">Bạn cần rèn luyện lại mốc quan trọng.<br>Đang đưa bạn về Level 7...</p>
+            <button class="action-btn" onclick="window.location.href='lv7.html'">Quay lại ngay</button>
         </div>
     </div>
 
@@ -163,7 +161,6 @@
         const wrongSound = new Audio('sai.mp3');
         const victorySound = new Audio('chien-thang.mp3');
 
-        // Danh sách số cần ôn tập và thi đấu
         const rawNumbers = ["03", "06", "08", "07", "10", "14", "15", "17", "19", "20", "21", "23", "25", "26", "28", "32", "34", "35", "38", "39"];
 
         let gameQuestions = [];
@@ -174,30 +171,39 @@
         let gameActive = false;
         let startTime;
 
-        // --- HỆ THỐNG CHUYỂN LEVEL NHANH (00-99) ---
+        // --- HỆ THỐNG CHUYỂN LEVEL NHANH ---
         let inputBuffer = "";
         let inputTimeout;
+
         window.addEventListener('keydown', (e) => {
+            // Logic Debug phím tắt cũ
             if (e.key.toLowerCase() === 't') handleWin();
             if (e.key.toLowerCase() === 'l') handleLose();
+
+            // Logic Chuyển Level 00-99
             if (e.key >= '0' && e.key <= '9') {
                 clearTimeout(inputTimeout);
                 inputBuffer += e.key;
+
                 if (inputBuffer.length === 2) {
-                    let levelNum = parseInt(inputBuffer, 10);
-                    window.location.href = (levelNum === 10) ? location.reload() : `lv${levelNum}.html`;
+                    const levelNum = parseInt(inputBuffer);
+                    // Chuyển hướng đến lv[X].html
+                    window.location.href = `lv${levelNum}.html`;
                     inputBuffer = "";
                 }
-                inputTimeout = setTimeout(() => { inputBuffer = ""; }, 800);
+
+                // Nếu sau 800ms không gõ thêm, tự xóa bộ nhớ đệm
+                inputTimeout = setTimeout(() => {
+                    inputBuffer = "";
+                }, 800);
             }
         });
 
-        // --- TỰ ĐỘNG SINH ẢNH ÔN TẬP (CÔNG THỨC: a[số].png) ---
         const reviewGrid = document.getElementById('review-grid');
         rawNumbers.forEach(num => {
             const div = document.createElement('div');
             div.className = 'review-item';
-            div.innerHTML = `<img src="a${num}.png" alt="${num}">`; 
+            div.innerHTML = `<img src="a${num}.png">`; 
             reviewGrid.appendChild(div);
         });
 
@@ -228,7 +234,6 @@
 
             for (let i = 0; i < 4; i++) {
                 const card = document.getElementById(`opt-${i}`);
-                // Khi chơi vẫn dùng file [số].png như cũ
                 card.innerHTML = `<img src="${options[i]}.png">`; 
                 card.dataset.number = options[i];
                 card.className = 'option-card';
