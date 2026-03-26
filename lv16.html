@@ -106,7 +106,7 @@
     </div>
 
     <div id="review-modal" class="modal active">
-        <h2 style="color: var(--electric)">ÔN TẬP BẬC THẦY</h2>
+        <h2 style="color: var(--electric)">LEVEL 16 :ÔN TẬP BẬC THẦY</h2>
         <div class="review-grid" id="review-list"></div>
         <button class="action-btn" onclick="startGame()">BẮT ĐẦU</button>
     </div>
@@ -133,22 +133,46 @@
 <script>
     const bgMusic = new Audio('nhac-nen-2.mp3'); 
     bgMusic.loop = true;
-    bgMusic.volume = 0.07; // Giảm xuống 7%
+    bgMusic.volume = 0.07; 
 
     const correctSound = new Audio('bum.mp3');
-    correctSound.volume = 1.0; // Tăng âm lượng hiệu ứng
+    correctSound.volume = 1.0; 
 
     const wrongSound = new Audio('sai.mp3');
     wrongSound.volume = 1.0;
 
-    const bonusSound = new Audio('chien-thang.mp3'); // Âm thanh khi combo 3 câu
+    const bonusSound = new Audio('chien-thang.mp3'); 
     bonusSound.volume = 0.8;
+
+    // --- TÍNH NĂNG CHUYỂN LEVEL NHANH ---
+    let inputBuffer = "";
+    let inputTimeout;
+
+    window.addEventListener('keydown', (e) => {
+        // Phím T để test nhanh kết quả
+        if (e.key.toLowerCase() === 't') { showResult(); return; }
+
+        // Nhận diện số 00-99
+        if (e.key >= '0' && e.key <= '9') {
+            clearTimeout(inputTimeout);
+            inputBuffer += e.key;
+
+            if (inputBuffer.length === 2) {
+                const levelNum = parseInt(inputBuffer);
+                window.location.href = `lv${levelNum}.html`;
+                inputBuffer = "";
+            }
+
+            inputTimeout = setTimeout(() => {
+                inputBuffer = "";
+            }, 800); 
+        }
+    });
 
     const fullData = ["03", "06", "07", "08", "10", "14", "15", "17", "19", "20", "21", "23", "25", "26", "28", "32", "34", "35", "38", "39", "43", "44", "46", "48", "49", "50", "58", "59", "62", "64", "65", "69"];
     
     let currentIdx = 0, correctCount = 0, combo = 0, totalScore = 0, timeLeft = 10, timerInterval, quizData = [];
 
-    // Render Ôn tập
     const rList = document.getElementById('review-list');
     fullData.forEach(num => { rList.innerHTML += `<div class="rev-item"><img src="a${num}.png"></div>`; });
 
@@ -169,7 +193,6 @@
         const correctNum = quizData[currentIdx];
         const qBox = document.getElementById('question-box');
         
-        // Hiệu ứng chớp sáng khi đổi câu
         qBox.classList.add('flash');
         qBox.innerText = correctNum;
         setTimeout(() => qBox.classList.remove('flash'), 300);
@@ -195,8 +218,6 @@
 
     function checkAnswer(selected, correct) {
         clearInterval(timerInterval);
-        const container = document.getElementById('quiz-container');
-
         if (selected === correct) {
             correctCount++;
             combo++;
@@ -204,7 +225,6 @@
             showFloatingText("+5", "var(--electric)");
             correctSound.currentTime = 0; correctSound.play();
 
-            // Hiệu ứng Combo 3 câu
             if (combo === 3) {
                 totalScore += 30;
                 combo = 0;
@@ -212,7 +232,7 @@
                 bonusSound.currentTime = 0; bonusSound.play();
             }
         } else {
-            combo = 0; // Reset combo khi sai
+            combo = 0; 
             totalScore = Math.max(0, totalScore - 5);
             showFloatingText("-5", "var(--red)");
             wrongSound.currentTime = 0; wrongSound.play();
@@ -250,9 +270,6 @@
         document.getElementById('win-modal').classList.add('active');
         setTimeout(() => { document.getElementById('progress-fill').style.width = "100%"; }, 500);
     }
-
-    // TEST NHANH (Phím T)
-    window.addEventListener('keydown', (e) => { if (e.key.toLowerCase() === 't') showResult(); });
 </script>
 </body>
 </html>
