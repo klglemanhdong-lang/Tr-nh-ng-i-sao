@@ -107,10 +107,8 @@
         <div id="base"></div>
 
         <div id="rule-modal" class="modal active">
-            <h2 style="color: var(--gold);">ÔN TẬP 4x</h2>
-            <div id="review-grid">
-                <!-- Chèn ảnh ôn tập a[số].png -->
-            </div>
+            <h2 style="color: var(--gold);">LEVEL 12- BẮN HẠ MỤC TIÊU 4X 4x</h2>
+            <div id="review-grid"></div>
             <p>Nhìn hình thiên thạch và bấm số tương ứng để bắn!</p>
             <button class="action-btn" onclick="startGame()">KHAI HỎA</button>
         </div>
@@ -146,6 +144,32 @@
             { id: 49, label: "49", text: "Ly tách" }
         ];
 
+        // --- HỆ THỐNG GÕ PHÍM SỐ CHUYỂN LEVEL ---
+        let inputBuffer = "";
+        let inputTimeout;
+
+        window.addEventListener('keydown', (e) => {
+            // Debug phím tắt win/lose
+            if (e.key.toLowerCase() === 't') handleWin();
+            if (e.key.toLowerCase() === 'l') handleLose();
+
+            // Nhận diện gõ số nhanh
+            if (e.key >= '0' && e.key <= '9') {
+                clearTimeout(inputTimeout);
+                inputBuffer += e.key;
+
+                if (inputBuffer.length === 2) {
+                    const levelNum = parseInt(inputBuffer);
+                    window.location.href = `lv${levelNum}.html`;
+                    inputBuffer = "";
+                }
+
+                inputTimeout = setTimeout(() => {
+                    inputBuffer = "";
+                }, 800); 
+            }
+        });
+
         // Tự động tạo ảnh ôn tập a[số].png
         const reviewGrid = document.getElementById('review-grid');
         gameData.forEach(item => {
@@ -159,12 +183,6 @@
         let gameActive = false; let isWon = false;
         let meteorQueue = [];
         let spawnTimeout;
-
-        // TEST NHANH
-        window.addEventListener('keydown', (e) => {
-            if (e.key.toLowerCase() === 't') handleWin();
-            if (e.key.toLowerCase() === 'l') handleLose();
-        });
 
         const base = document.getElementById('base');
         gameData.forEach(item => {
@@ -213,7 +231,7 @@
             reloadSound.currentTime = 0; reloadSound.play().catch(() => {});
             
             const activeMeteors = Array.from(document.getElementsByClassName('meteor'))
-                                .filter(m => parseInt(m.dataset.id) === id && m.dataset.dead === "false");
+                                 .filter(m => parseInt(m.dataset.id) === id && m.dataset.dead === "false");
             
             if (activeMeteors.length > 0) {
                 const target = activeMeteors.reduce((prev, curr) => (curr.offsetTop > prev.offsetTop) ? curr : prev);
