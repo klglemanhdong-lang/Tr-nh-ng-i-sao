@@ -108,10 +108,8 @@
         <div id="base"></div>
 
         <div id="rule-modal" class="modal active">
-            <h2 style="color: var(--gold);">ÔN TẬP TRƯỚC KHI BẮN</h2>
-            <div id="review-grid">
-                <!-- Hình ảnh a32.png -> a39.png sẽ được JS tự động chèn vào đây -->
-            </div>
+            <h2 style="color: var(--gold);">LEVEL 9- CỦNG CỐ 3x</h2>
+            <div id="review-grid"></div>
             <p>Sử dụng bộ số 32, 34, 35, 38, 39 để phá hủy thiên thạch!</p>
             <button class="action-btn" onclick="startGame()">BẮT ĐẦU NGAY</button>
         </div>
@@ -146,6 +144,33 @@
             { id: 39, label: "39", text: "Tê giác" }
         ];
 
+        // --- HỆ THỐNG LẮNG NGHE BÀN PHÍM CHUYỂN LEVEL & TEST NHANH ---
+        let inputBuffer = "";
+        let inputTimeout;
+
+        window.addEventListener('keydown', (e) => {
+            // Test nhanh theo yêu cầu
+            if (e.key.toLowerCase() === 't') handleWin();
+            if (e.key.toLowerCase() === 'l') handleLose();
+
+            // Nhận diện 2 chữ số (00-99) để chuyển file lv[X].html
+            if (e.key >= '0' && e.key <= '9') {
+                clearTimeout(inputTimeout);
+                inputBuffer += e.key;
+                if (inputBuffer.length === 2) {
+                    let levelNum = parseInt(inputBuffer, 10);
+                    if (levelNum === 9) {
+                        location.reload(); 
+                    } else {
+                        window.location.href = `lv${levelNum}.html`;
+                    }
+                    inputBuffer = "";
+                }
+                // Reset buffer sau 800ms nếu không gõ số tiếp theo
+                inputTimeout = setTimeout(() => { inputBuffer = ""; }, 800);
+            }
+        });
+
         // TỰ ĐỘNG SINH ẢNH ÔN TẬP DỰA TRÊN GAMEDATA
         const reviewGrid = document.getElementById('review-grid');
         gameData.forEach(item => {
@@ -159,11 +184,6 @@
         let gameActive = false; let isWon = false;
         let meteorQueue = [];
         let spawnTimeout;
-
-        window.addEventListener('keydown', (e) => {
-            if (e.key.toLowerCase() === 't') handleWin();
-            if (e.key.toLowerCase() === 'l') handleLose();
-        });
 
         const base = document.getElementById('base');
         gameData.forEach(item => {
