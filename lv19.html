@@ -113,7 +113,7 @@
     </div>
 
     <div id="review-modal" class="modal active">
-        <h2 style="color: var(--electric)">ÔN TẬP BẬC THẦY</h2>
+        <h2 style="color: var(--electric)">LEVEL 19: TỔNG ÔN 0x ĐẾN 6x</h2>
         <div class="review-grid" id="review-list"></div>
         <button class="action-btn" onclick="startGame()">BẮT ĐẦU</button>
     </div>
@@ -148,13 +148,33 @@
     const winSound = new Audio('chien-thang.mp3');
     const time5sSound = new Audio('time5s.mp3');
 
-    // Tăng âm lượng hiệu ứng
     [dungSound, saiSound, bombSound, winSound, time5sSound].forEach(s => s.volume = 1.0);
 
     const fullData = ["03", "06", "07", "08", "10", "14", "15", "17", "19", "20", "21", "23", "25", "26", "28", "32", "34", "35", "38", "39", "43", "44", "46", "48", "49", "50", "58", "59", "62", "64", "65", "69"];
     
     let currentIdx = 0, correctCount = 0, combo = 0, totalScore = 0, timeLeft = 10, timerInterval, quizData = [];
     let gameStartTime, is5sPlayed = false;
+
+    // --- TÍNH NĂNG CHUYỂN LEVEL NHANH ---
+    let inputBuffer = "";
+    let inputTimeout;
+
+    window.addEventListener('keydown', (e) => {
+        // Phím tắt Win Test (Giữ nguyên)
+        if (e.key.toLowerCase() === 't') showResult();
+
+        // Nhận diện gõ 2 chữ số
+        if (e.key >= '0' && e.key <= '9') {
+            clearTimeout(inputTimeout);
+            inputBuffer += e.key;
+            if (inputBuffer.length === 2) {
+                const levelNum = parseInt(inputBuffer);
+                window.location.href = `lv${levelNum}.html`;
+                inputBuffer = "";
+            }
+            inputTimeout = setTimeout(() => { inputBuffer = ""; }, 800);
+        }
+    });
 
     const rList = document.getElementById('review-list');
     fullData.forEach(num => { rList.innerHTML += `<div class="rev-item"><img src="a${num}.png"></div>`; });
@@ -225,7 +245,7 @@
         } else {
             combo = 0; 
             totalScore = Math.max(0, totalScore - 5);
-            cardElement.classList.add('wrong-tap');
+            if (cardElement && cardElement.classList) cardElement.classList.add('wrong-tap');
             showFloatingText("-5", "var(--red)");
             saiSound.currentTime = 0; saiSound.play();
         }
@@ -252,10 +272,10 @@
         timerInterval = setInterval(() => {
             timeLeft -= 0.1;
             const tFill = document.getElementById('timer-fill');
-            tFill.style.width = (timeLeft / 10) * 100 + "%";
+            if (tFill) tFill.style.width = (timeLeft / 10) * 100 + "%";
 
             if (timeLeft <= 5) {
-                tFill.classList.add('time-warning');
+                if (tFill) tFill.classList.add('time-warning');
                 if (!is5sPlayed) {
                     time5sSound.play();
                     is5sPlayed = true;
@@ -263,7 +283,7 @@
             }
 
             if (timeLeft <= 0) { 
-                checkAnswer(null, "TIME_UP", {classList: {add: ()=>{}}}); 
+                checkAnswer(null, "TIME_UP", null); 
             }
         }, 100);
     }
@@ -278,13 +298,10 @@
         document.getElementById('final-time').innerText = `Thời gian hoàn thành: ${totalTime} giây`;
         document.getElementById('win-modal').classList.add('active');
         
-        // Hiệu ứng thanh tiến trình từ 0 đến 100%
         setTimeout(() => {
             document.getElementById('progress-fill').style.width = "100%";
         }, 500);
     }
-
-    window.addEventListener('keydown', (e) => { if (e.key.toLowerCase() === 't') showResult(); });
 </script>
 </body>
 </html>
