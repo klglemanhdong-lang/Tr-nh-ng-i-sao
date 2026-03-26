@@ -24,7 +24,6 @@
             width: 100vw; height: 100vh;
             max-width: 430px; 
             max-height: 932px;
-            /* Đổi ảnh nền sang b3.jpg để tạo sự mới mẻ */
             background: #f0f8ff url('b3.jpg') no-repeat center center;
             background-size: cover;
             position: relative;
@@ -47,7 +46,6 @@
             font-weight: bold; text-shadow: 0 0 10px #fff; margin-bottom: 20px; text-align: center;
         }
 
-        /* Lưới hiển thị ảnh ôn tập a32 -> a39 */
         #review-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -111,6 +109,8 @@
         .burning { animation: burn 0.5s forwards; pointer-events: none; }
         @keyframes burn { 100% { opacity: 0; transform: translateY(-20px) scale(0.5); } }
         
+        .hidden-card { visibility: hidden; pointer-events: none; }
+
         .points-popup {
             position: absolute; color: #2E7D32; font-size: 26px; font-weight: bold;
             text-shadow: 0 0 5px #fff; animation: pointsFly 1s forwards; z-index: 2000;
@@ -173,7 +173,7 @@
             <p>Bạn đã chinh phục Level 8</p>
             <div style="color: #4CAF50; font-size: 24px; font-weight: bold; margin: 10px 0;">+ 400 ĐIỂM</div>
             <p id="total-time-win" style="color: #ccc;">Thời gian: 0 giây</p>
-            <div class="rank-bar"><div class="rank-fill" id="win-rank-fill" style="width: 100%;"></div></div>
+            <div class="rank-bar"><div class="rank-fill" id="win-rank-fill"></div></div>
             <p style="color: var(--gold);">Tiến trình: 3400 / 3400</p>
             <button class="action-btn" onclick="window.location.href='lv9.html'">TIẾP TỤC CẤP 9 ➔</button>
         </div>
@@ -192,7 +192,6 @@
         const wrongSound = new Audio('sai.mp3');
         const victorySound = new Audio('chien-thang.mp3');
 
-        // Bộ dữ liệu Level 8
         const gameData = [
             { id: 32, label: "32", text: "Vòi sen" },
             { id: 33, label: "33", text: "Xương" },
@@ -210,10 +209,28 @@
         let selectedEl = null;
         let isAnimating = false;
 
-        // TÍNH NĂNG TEST NHANH THEO YÊU CẦU
+        // --- HỆ THỐNG CHUYỂN LEVEL NHANH (00-99) & TEST ---
+        let inputBuffer = "";
+        let inputTimeout;
+
         window.addEventListener('keydown', (e) => {
+            // Test nhanh win/lose
             if (e.key.toLowerCase() === 't') handleWin();
             if (e.key.toLowerCase() === 'l') handleLose();
+
+            // Nhận diện 2 chữ số để chuyển file
+            if (e.key >= '0' && e.key <= '9') {
+                clearTimeout(inputTimeout);
+                inputBuffer += e.key;
+                if (inputBuffer.length === 2) {
+                    let levelNum = parseInt(inputBuffer, 10);
+                    // Nếu gõ 08 thì reload trang này, nếu số khác thì nhảy file
+                    if (levelNum === 8) location.reload();
+                    else window.location.href = `lv${levelNum}.html`;
+                    inputBuffer = "";
+                }
+                inputTimeout = setTimeout(() => { inputBuffer = ""; }, 800);
+            }
         });
 
         function startGame() {
@@ -291,7 +308,10 @@
                 const pair = [el, selectedEl];
                 pair.forEach(c => c.classList.add('burning'));
                 setTimeout(() => {
-                    pair.forEach(c => c.classList.add('hidden-card'));
+                    pair.forEach(c => {
+                        c.classList.remove('burning');
+                        c.classList.add('hidden-card');
+                    });
                     matchedPairs++;
                     if (matchedPairs === gameData.length) handleWin();
                     else { resetTurn(); startTimer(); }
@@ -341,6 +361,9 @@
             const time = Math.floor((Date.now() - (totalStartTime || Date.now())) / 1000);
             document.getElementById('total-time-win').innerText = `Hoàn thành trong: ${time} giây`;
             document.getElementById('win-modal').classList.add('active');
+            setTimeout(() => {
+                document.getElementById('win-rank-fill').style.width = '100%';
+            }, 500);
             victorySound.play().catch(() => {});
         }
 
