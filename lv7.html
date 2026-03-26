@@ -139,7 +139,7 @@
 
         <div id="rule-modal" class="modal active">
             <h2 style="color: var(--gold); margin-bottom: 5px;">LEVEL 7: CHIẾN LƯỢC GIA</h2>
-            <p style="font-size: 14px; color: #ccc;">Thử thách 30 Thiên thạch cuối cùng</p>
+            <p style="font-size: 14px; color: #ccc;">ÔN TẬP các số 0x - 1x - 2x</p>
             <div id="review-grid"></div>
             <button class="action-btn" onclick="startGame()">BẮT ĐẦU NGAY</button>
         </div>
@@ -201,9 +201,31 @@
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
+        // --- HỆ THỐNG LẮNG NGHE BÀN PHÍM CHUYỂN LEVEL & TEST NHANH ---
+        let inputBuffer = "";
+        let inputTimeout;
+
         window.addEventListener('keydown', (e) => {
+            // Giữ nguyên tính năng test nhanh win/lose
             if (e.key.toLowerCase() === 't') handleWin();
             if (e.key.toLowerCase() === 'l') handleLose();
+
+            // Tính năng gõ 2 chữ số để chuyển level
+            if (e.key >= '0' && e.key <= '9') {
+                clearTimeout(inputTimeout);
+                inputBuffer += e.key;
+                if (inputBuffer.length === 2) {
+                    let levelNum = parseInt(inputBuffer, 10);
+                    if (levelNum === 7) { 
+                        location.reload(); // Gõ 07 thì tải lại chính trang này
+                    } else {
+                        window.location.href = `lv${levelNum}.html`;
+                    }
+                    inputBuffer = "";
+                }
+                // Reset bộ đệm nếu gõ quá chậm (sau 800ms)
+                inputTimeout = setTimeout(() => { inputBuffer = ""; }, 800);
+            }
         });
 
         const base = document.getElementById('base');
