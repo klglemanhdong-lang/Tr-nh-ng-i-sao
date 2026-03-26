@@ -9,7 +9,7 @@
             --electric: #00FBFF;
             --gold: #FFD700;
             --bg-dark: #0a0a0a;
-            --card-w: 65px; /* Nhỏ hơn để vừa 22 thẻ */
+            --card-w: 65px; 
             --card-h: 90px;
         }
 
@@ -30,7 +30,7 @@
         #timer-bar { width: 100%; height: 6px; background: #222; margin-top: 8px; border-radius: 3px; overflow: hidden; }
         #timer-fill { width: 100%; height: 100%; background: var(--electric); transition: width 0.1s linear; }
 
-        /* Grid - 22 thẻ (4 cột x 6 hàng hoặc linh hoạt) */
+        /* Grid */
         #grid { 
             display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; 
             padding: 15px; justify-items: center; overflow-y: auto; flex-grow: 1;
@@ -48,10 +48,8 @@
         .card b { font-size: 24px; color: #d32f2f; }
         .card span { font-size: 8px; color: #333; font-weight: bold; text-align: center; }
 
-        /* Hiệu ứng Tia sét */
         #lightning-canvas { position: absolute; inset: 0; pointer-events: none; z-index: 100; }
 
-        /* Modals */
         .modal { 
             display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.95); 
             flex-direction: column; align-items: center; justify-content: center; 
@@ -59,7 +57,6 @@
         }
         .modal.active { display: flex; }
 
-        /* Ôn tập - Sử dụng a[số].png */
         .review-scroll { 
             display: grid; grid-template-columns: 1fr 1fr; gap: 10px; 
             width: 100%; max-height: 60vh; overflow-y: auto; margin: 15px 0;
@@ -67,7 +64,6 @@
         .rev-item { background: #fff; padding: 5px; border-radius: 8px; border: 2px solid var(--electric); }
         .rev-item img { width: 100%; border-radius: 5px; }
 
-        /* Thắng cuộc */
         .rank-bar { width: 100%; height: 15px; background: #333; border-radius: 10px; margin: 15px 0; border: 1px solid var(--gold); overflow: hidden; }
         .rank-fill { width: 94.7%; height: 100%; background: linear-gradient(90deg, #ffd700, #fff); transition: width 2s; }
         
@@ -97,14 +93,12 @@
 
     <div id="grid"></div>
 
-    <!-- MÀN HÌNH ÔN TẬP -->
     <div id="review-modal" class="modal active">
-        <h2 style="color: var(--electric)">GHI NHỚ 11 CẶP THẺ</h2>
+        <h2 style="color: var(--electric)">LEVEL 17: ÔN TẬP CÁC SỐ 3X - 5X - 6X</h2>
         <div class="review-scroll" id="review-list"></div>
         <button class="action-btn" onclick="startGame()">BẮT ĐẦU PHÓNG SÉT</button>
     </div>
 
-    <!-- MÀN HÌNH THẮNG -->
     <div id="win-modal" class="modal">
         <img src="3vang.png" style="width: 150px; filter: drop-shadow(0 0 15px var(--gold));">
         <h1 style="color: var(--gold)">SIÊU PHÀM!</h1>
@@ -121,7 +115,6 @@
         <button class="action-btn" style="margin-top: 20px;" onclick="window.location.href='lv18.html'">TIẾP TỤC LV 18 ➔</button>
     </div>
 
-    <!-- MÀN HÌNH THUA -->
     <div id="lose-modal" class="modal">
         <h1 style="color: #ff5252;">HỆ THỐNG QUÁ TẢI</h1>
         <p>Đừng nản lòng, trí tuệ cần sự rèn luyện!</p>
@@ -133,6 +126,28 @@
     const bgMusic = new Audio('nhac-nen.mp3'); bgMusic.loop = true;
     const zapSound = new Audio('bum.mp3');
     const wrongSound = new Audio('sai.mp3');
+
+    // --- TÍNH NĂNG CHUYỂN LEVEL NHANH ---
+    let inputBuffer = "";
+    let inputTimeout;
+
+    window.addEventListener('keydown', (e) => {
+        // Phím T (Test Win), L (Test Lose)
+        if (e.key.toLowerCase() === 't') handleWin();
+        if (e.key.toLowerCase() === 'l') handleLose();
+
+        // Nhận diện gõ số nhanh
+        if (e.key >= '0' && e.key <= '9') {
+            clearTimeout(inputTimeout);
+            inputBuffer += e.key;
+            if (inputBuffer.length === 2) {
+                const levelNum = parseInt(inputBuffer);
+                window.location.href = `lv${levelNum}.html`;
+                inputBuffer = "";
+            }
+            inputTimeout = setTimeout(() => { inputBuffer = ""; }, 800);
+        }
+    });
 
     const gameNumbers = [62, 64, 65, 69, 50, 58, 32, 34, 35, 38, 39];
     const dataDetails = {
@@ -151,13 +166,6 @@
     }
     window.addEventListener('resize', resize); resize();
 
-    // TEST NHANH
-    window.addEventListener('keydown', (e) => {
-        if (e.key.toLowerCase() === 't') handleWin();
-        if (e.key.toLowerCase() === 'l') handleLose();
-    });
-
-    // Render Ôn tập (a[số].png)
     const rList = document.getElementById('review-list');
     gameNumbers.forEach(num => {
         rList.innerHTML += `<div class="rev-item"><img src="a${num}.png"></div>`;
@@ -175,9 +183,7 @@
         const grid = document.getElementById('grid');
         let cards = [];
         gameNumbers.forEach(num => {
-            // Thẻ số
             cards.push({ id: num, html: `<b>${num}</b>` });
-            // Thẻ hình ([số].png)
             cards.push({ id: num, html: `<img src="${num}.png"><span>${dataDetails[num]}</span>` });
         });
         cards.sort(() => Math.random() - 0.5);
@@ -262,7 +268,6 @@
 
     function handleWin() {
         clearInterval(timer);
-        isWon = true;
         const time = Math.floor((Date.now() - startTime) / 1000);
         document.getElementById('finish-time').innerText = `Thời gian hoàn thành: ${time} giây`;
         document.getElementById('win-modal').classList.add('active');
