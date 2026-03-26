@@ -89,7 +89,7 @@
         @keyframes silverGlow {
             0% { filter: drop-shadow(0 0 10px var(--silver)); }
             50% { filter: drop-shadow(0 0 35px white) drop-shadow(0 0 15px var(--silver)); }
-            100% { filter: drop-shadow(0 0 10px var(--bronze)); }
+            100% { filter: drop-shadow(0 0 10px var(--silver)); }
         }
         #victory-badge {
             width: 240px; height: auto; margin-bottom: 15px;
@@ -166,6 +166,27 @@
         let meteorQueue = [];
         let spawnTimeout;
 
+        // --- HỆ THỐNG CHUYỂN LEVEL NHANH (00-99) ---
+        let inputBuffer = "";
+        let inputTimeout;
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key >= '0' && e.key <= '9') {
+                clearTimeout(inputTimeout);
+                inputBuffer += e.key;
+                if (inputBuffer.length === 2) {
+                    let levelNum = parseInt(inputBuffer);
+                    if (levelNum === 4) location.reload();
+                    else window.location.href = `lv${levelNum}.html`;
+                    inputBuffer = "";
+                }
+                inputTimeout = setTimeout(() => { inputBuffer = ""; }, 800);
+            }
+            // Hỗ trợ test nhanh Thắng/Thua
+            if (e.key.toLowerCase() === 't') handleWin();
+            if (e.key.toLowerCase() === 'l') handleLose();
+        });
+
         const base = document.getElementById('base');
         gameData.forEach(item => {
             const wrapper = document.createElement('div');
@@ -183,7 +204,6 @@
             score = 0; combo = 0; lives = 5;
             document.getElementById('score').innerText = score;
             meteorQueue = [...gameData].sort(() => Math.random() - 0.5);
-            // Bổ sung thêm 1 hình ngẫu nhiên để đủ 10 hình
             meteorQueue.push(gameData[Math.floor(Math.random() * gameData.length)]);
             
             updateLivesUI();
@@ -238,7 +258,7 @@
                 boomSound.currentTime = 0; boomSound.play().catch(() => {});
 
                 if (score >= 10) {
-                    isWon = true; // KHÓA TRẠNG THÁI THẮNG NGAY
+                    isWon = true;
                     handleWin();
                     target.remove();
                     return;
@@ -305,7 +325,7 @@
         }
 
         function checkGameState() {
-            if (!gameActive || isWon) return; // Nếu đã thắng thì không kiểm tra nữa
+            if (!gameActive || isWon) return;
             const remainingMeteors = document.querySelectorAll('.meteor[data-dead="false"]').length;
             if (meteorQueue.length === 0 && remainingMeteors === 0 && score < 10) {
                 handleLose();
