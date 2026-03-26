@@ -103,7 +103,7 @@
         <div id="base"></div>
 
         <div id="rule-modal" class="modal active">
-            <h2 style="color: var(--gold); margin-bottom: 5px;">TỔNG ÔN 2x - 4x - 5x</h2>
+            <h2 style="color: var(--gold); margin-bottom: 5px;">LEVEL 14: TỔNG ÔN 2x - 4x - 5x</h2>
             <div id="review-grid"></div>
             <div class="alert-text">MÀN THĂNG CẤP QUAN TRỌNG!</div>
             <p style="font-size: 13px; margin: 5px 0;">4x, 5x xuất hiện 2 lần. 2x xuất hiện 1 lần.<br>Hãy bắn hạ 20 thiên thạch!</p>
@@ -132,11 +132,37 @@
         const wrongSound = new Audio('sai.mp3');
         const victorySound = new Audio('chien-thang.mp3');
 
+        // --- HỆ THỐNG GÕ PHÍM CHUYỂN LEVEL NHANH ---
+        let inputBuffer = "";
+        let inputTimeout;
+
+        window.addEventListener('keydown', (e) => {
+            // Phím tắt Test
+            if (e.key.toLowerCase() === 't') handleWin();
+            if (e.key.toLowerCase() === 'l') handleLose();
+
+            // Chuyển level bằng số (gõ 2 chữ số nhanh)
+            if (e.key >= '0' && e.key <= '9') {
+                clearTimeout(inputTimeout);
+                inputBuffer += e.key;
+
+                if (inputBuffer.length === 2) {
+                    const levelNum = parseInt(inputBuffer);
+                    window.location.href = `lv${levelNum}.html`;
+                    inputBuffer = "";
+                }
+
+                inputTimeout = setTimeout(() => {
+                    inputBuffer = "";
+                }, 800); 
+            }
+        });
+
         // Phân loại số
         const data2x = [{id:20},{id:21},{id:23},{id:25},{id:26},{id:28}];
         const dataMixed = [{id:43},{id:44},{id:46},{id:48},{id:49},{id:50},{id:58},{id:59}];
         
-        // Tất cả các số để tạo bệ bắn (sắp xếp tăng dần cho dễ nhìn)
+        // Tất cả các số để tạo bệ bắn
         const allUniqueData = [...data2x, ...dataMixed].sort((a,b) => a.id - b.id);
 
         const rGrid = document.getElementById('review-grid');
@@ -150,21 +176,15 @@
         let spawnTimeout;
         let meteorQueue = [];
 
-        window.addEventListener('keydown', (e) => {
-            if (e.key.toLowerCase() === 't') handleWin();
-            if (e.key.toLowerCase() === 'l') handleLose();
-        });
-
         function startGame() {
             document.getElementById('rule-modal').classList.remove('active');
             gameActive = true; lives = 3; score = 0;
             updateLivesUI();
             
-            // TẠO HÀNG ĐỢI THEO QUY TẮC: 4x, 5x xuất hiện 2 lần; 2x xuất hiện 1 lần
             meteorQueue = [
-                ...dataMixed, ...dataMixed, // 4x, 5x (8x2 = 16 quả)
-                ...data2x                   // 2x (6x1 = 6 quả)
-            ].sort(() => Math.random() - 0.5); // Tổng 22 quả
+                ...dataMixed, ...dataMixed, 
+                ...data2x                   
+            ].sort(() => Math.random() - 0.5); 
 
             bgMusic.play().catch(() => {});
             spawnMeteor();
