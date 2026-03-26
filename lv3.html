@@ -116,6 +116,9 @@
             100% { transform: translateY(-60px); opacity: 0; }
         }
 
+        /* Ẩn card khi đã match */
+        .hidden-card { visibility: hidden; pointer-events: none; }
+
         /* --- MODALS --- */
         .modal { 
             display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
@@ -208,10 +211,29 @@
         let selectedEl = null;
         let isAnimating = false;
 
-        // --- TÍNH NĂNG TEST NHANH ---
+        // --- HỆ THỐNG GÕ SỐ CHUYỂN LEVEL & TEST NHANH ---
+        let inputBuffer = "";
+        let inputTimeout;
+
         window.addEventListener('keydown', (e) => {
-            if (e.key.toLowerCase() === 't') handleWin();
-            if (e.key.toLowerCase() === 'l') handleLose();
+            const key = e.key.toLowerCase();
+            
+            // 1. Chuyển hướng nhanh theo số (00-99)
+            if (e.key >= '0' && e.key <= '9') {
+                clearTimeout(inputTimeout);
+                inputBuffer += e.key;
+                if (inputBuffer.length === 2) {
+                    let levelNum = parseInt(inputBuffer);
+                    if (levelNum === 3) location.reload();
+                    else window.location.href = `lv${levelNum}.html`;
+                    inputBuffer = "";
+                }
+                inputTimeout = setTimeout(() => { inputBuffer = ""; }, 800);
+            }
+
+            // 2. Test nhanh Thắng/Thua
+            if (key === 't') handleWin();
+            if (key === 'l') handleLose();
         });
 
         function startGame() {
@@ -336,9 +358,7 @@
             document.getElementById('mobile-wrapper').classList.add('shake');
             setTimeout(() => document.getElementById('mobile-wrapper').classList.remove('shake'), 300);
             if (lives <= 0) handleLose();
-            else { 
-                startTimer(); 
-            }
+            else { startTimer(); }
         }
 
         function updateLivesUI() {
